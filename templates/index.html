@@ -28,7 +28,7 @@
   <hr class="border-slate-200 dark:border-slate-800/80 my-1">
 
       <!-- Stats Grid (4 cols on lg) -->
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="stats-grid">
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" id="stats-grid">
     <!-- Skeletons shown until data loads -->
     <div class="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-xl flex flex-col gap-2">
       <div class="skeleton h-3 w-20 rounded"></div>
@@ -149,7 +149,30 @@
               <span id="stat-velocity">${lastActiveStr}</span>
             </span>
           </div>
+          
+          <div class="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-xl flex flex-col transition-all hover:border-purple-300 dark:hover:border-purple-700 relative overflow-hidden">
+            <span class="text-xs font-mono text-purple-600 dark:text-purple-400">Primary API Quota</span>
+            <span class="text-xl sm:text-xl font-bold font-mono text-purple-700 dark:text-purple-300 mt-1" id="stat-quota">Loading...</span>
+          </div>
         `;
+        
+        let quotaText = "Unknown";
+        if (data.provider_usage) {
+            const pu = data.provider_usage;
+            if (pu.type === "tokens") {
+                quotaText = pu.remaining_requests ? `${parseInt(pu.remaining_requests).toLocaleString()} REQ` : "Unknown";
+            } else if (pu.type === "credits") {
+                quotaText = pu.remaining || "Unknown";
+            } else if (pu.type === "run_usage") {
+                quotaText = pu.tokens_used_this_run ? `${pu.tokens_used_this_run} TOK` : "Unknown";
+            } else if (pu.type === "requests") {
+                quotaText = pu.remaining_requests ? `${pu.remaining_requests} REQ` : "Unknown";
+            } else if (pu.type === "local") {
+                quotaText = pu.status;
+            }
+        }
+        document.getElementById('stat-quota').innerText = quotaText;
+        
         grid.classList.add('page-enter');
         if (data.logs && data.logs.length > 0) {
             const feed = document.getElementById('execution-feed');

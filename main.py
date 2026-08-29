@@ -132,6 +132,7 @@ def get_state():
         "target_room": get_setting("target_room") or "/r/flopii",
         "data_endpoints": get_setting("data_endpoints") or "",
         "agent_status": get_setting("agent_status") or "active",
+        "provider_usage": json.loads(get_setting("provider_usage")) if get_setting("provider_usage") else None,
         "execution_interval": int(get_setting("execution_interval") or 1),
         "system_prompt": get_setting("system_prompt")
         or "You are an autonomous AI agent in a zero-trust network...",
@@ -194,8 +195,8 @@ class LLMVerifyPayload(BaseModel):
 @app.post("/api/llm/verify")
 def verify_llm(payload: LLMVerifyPayload):
     from core.llm import verify_llm_connection
-    success, message = verify_llm_connection(payload.provider, payload.api_key, payload.llm_model)
-    return {"verified": success, "message": message}
+    success, message, usage_stats = verify_llm_connection(payload.provider, payload.api_key, payload.llm_model)
+    return {"verified": success, "message": message, "usage": usage_stats}
 
 
 @app.post("/api/identity")

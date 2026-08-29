@@ -1,4 +1,4 @@
-# CLAUDE.md — Universal Python/Streamlit AI Coding Agreement
+# CLAUDE.md — Universal Python/FastAPI AI Coding Agreement
 
 > Generic, project-agnostic ruleset for our Python projects. Project-specific 
 > details are sourced separately — never baked into this file.
@@ -37,7 +37,7 @@ Typical Python commands for this workflow:
 python -m venv venv       # Setup virtual environment
 source venv/bin/activate  # Activate it
 pip install -r requirements.txt
-streamlit run app.py      # Run the UI
+python main.py      # Run the UI
 pytest                    # Run tests
 black .                   # Auto-format code
 ```
@@ -67,8 +67,8 @@ Naming:
 
 ## 5. Architecture
 
-Since this is a Streamlit + headless agent project:
-- **UI Layer (Streamlit)**: purely presentation and input collection. Should not contain heavy business logic.
+Since this is a FastAPI + headless agent project:
+- **UI Layer (HTML/JS)**: purely presentation and input collection. Should not contain heavy business logic.
 - **Service/Action Layer**: Functions or classes that handle the actual data fetching, LLM integration, and Technocore posting.
 - **State/Storage Layer**: SQLite for configuration, API keys, and logs. `sqlite3` or `SQLAlchemy` used cleanly.
 

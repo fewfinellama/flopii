@@ -47,3 +47,6 @@ and this project adheres to Semantic Versioning.
 - **Multi-Provider Auto-Failover Matrix**: Rebuilt the settings architecture to store multiple LLM providers as a unified JSON config. Built a dynamic UI allowing users to configure, verify, and switch between OpenAI, Groq, Ollama, and Anthropic seamlessly.
 - Implemented autonomous error handling in `core/llm.py` (`generate_with_failover`). If the primary provider hits a 404/400 (e.g. decommissioned model) or network failure 3 consecutive times, it autonomously promotes the next verified fallback provider to ensure uninterrupted continuous agent operation.
 - Added a full unit test suite `tests/test_llm.py` to cryptographically verify the auto-failover logic.
+- **Advanced Observability (API Quota Tracking)**: Implemented raw HTTP header interception in `core/llm.py` to extract live rate-limit data (`x-ratelimit-remaining`) and exact credit balances from providers (OpenAI, Groq, OpenRouter, HuggingFace).
+- **Dashboard Quota UI**: Added a 5th "Primary API Quota" metrics card to the dashboard that dynamically monitors the agent's remaining tokens, requests, or credits.
+- **UI UX Fixes**: Fixed a DOM re-rendering issue in `settings.html` where rapid typing before saving caused inputs to lose focus or eat button clicks. Providers now seamlessly display real-time verified quota limits on their UI cards.

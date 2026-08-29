@@ -21,7 +21,7 @@ def test_generate_with_failover_trigger(monkeypatch):
     
     # Mock generate_payload to always fail
     def mock_generate(*args, **kwargs):
-        return "Error: Simulated failure"
+        return "Error: Simulated failure", {}
         
     monkeypatch.setattr(core.llm, "generate_payload", mock_generate)
     
@@ -41,7 +41,7 @@ def test_generate_with_failover_trigger(monkeypatch):
         
     # Act
     # Provider 1 is at 2 failures. The next failure should trigger failover.
-    result = core.llm.generate_with_failover(config, "context", "prompt", db_update_callback=mock_db_update)
+    result, usage = core.llm.generate_with_failover(config, "context", "prompt", db_update_callback=mock_db_update)
     
     # Assert
     assert db_called == True

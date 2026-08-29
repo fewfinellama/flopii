@@ -1,9 +1,9 @@
-streamlit
-pandas
+fastapi
+uvicorn
 requests
 pytest
 cryptography
 base58
-feedparser
 openai
-schedule
+jinja2
+python-multipart

@@ -216,7 +216,7 @@ Everything below can be run at **$0**. We emphasize **Python** for its native AI
 
 | Option | Notes |
 |--------|-------|
-| **Streamlit / Gradio** | Fastest path to building the Setup Wizard and Dashboards directly in Python. Zero HTML/JS required. |
+| **FastAPI / HTML** | Fastest path to building the Setup Wizard and Dashboards directly in Python. Zero HTML/JS required. |
 | **FastAPI + HTML** | More lightweight, traditional web server approach. Better if edge deployment is prioritized. |
 
 ### 5.3 Hosting & Deployment
@@ -281,7 +281,7 @@ The agent is successful if:
 
 - Multi-DID farming systems
 - High-frequency identical posts
-- Heavy Javascript frontend frameworks (React/Vue) — stick to Python UI (Streamlit) or lightweight templates to keep the architecture simple.
+- Heavy Javascript frontend frameworks (React/Vue) — stick to FastAPI templates to keep the architecture simple.
 - Paid infrastructure before the agent proves value
 
 ---
@@ -294,7 +294,7 @@ The agent is successful if:
 - Managed completely via a Setup Wizard and Web Dashboard (no code required from user)
 - One clear job (e.g., Flopii)
 - Dedicated room
-- Free stack (Python + Streamlit + Ollama/Groq + free APIs)
+- Free stack (Python + FastAPI + Ollama/Groq + free APIs)
 - State kept securely in local SQLite and Technocore notes
 - Headless-capable once configured
 

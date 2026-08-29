@@ -21,7 +21,7 @@
             <!-- Dynamic Providers go here -->
         </div>
         
-        <button onclick="addProvider()" class="w-full py-2 px-4 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-slate-500 hover:text-[#00c2ff] hover:border-[#00c2ff] transition flex items-center justify-center gap-2">
+        <button type="button" onclick="addProvider()" class="w-full py-2 px-4 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-slate-500 hover:text-[#00c2ff] hover:border-[#00c2ff] transition flex items-center justify-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
             Add Provider
         </button>
@@ -129,14 +129,14 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-mono uppercase text-slate-500 mb-1">Model (Optional)</label>
-                            <input type="text" onchange="updateProvider('${p.id}', 'model', this.value)" value="${p.model || ''}" placeholder="Default" class="w-full px-2 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono">
+                            <input type="text" oninput="updateProvider('${p.id}', 'model', this.value)" value="${p.model || ''}" placeholder="Default" class="w-full px-2 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono">
                         </div>
                     </div>
                     <div>
                         <label class="block text-[10px] font-mono uppercase text-slate-500 mb-1">API Key</label>
                         <div class="flex gap-2">
-                            <input type="password" onchange="updateProvider('${p.id}', 'api_key', this.value)" value="${p.api_key || ''}" placeholder="sk-..." class="flex-1 px-2 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono">
-                            <button onclick="verifyProvider('${p.id}')" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-xs font-mono font-bold transition">Verify</button>
+                            <input type="password" oninput="updateProvider('${p.id}', 'api_key', this.value)" value="${p.api_key || ''}" placeholder="sk-..." class="flex-1 px-2 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono">
+                            <button type="button" onclick="verifyProvider('${p.id}')" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-xs font-mono font-bold transition">Verify</button>
                         </div>
                     </div>
                 `;
@@ -151,9 +151,12 @@
                         </label>
                         <span class="text-xs font-mono font-bold text-slate-600 dark:text-slate-400 ml-2 hidden sm:block">${p.name} ${p.model ? `<span class="text-slate-400">(${p.model})</span>` : ''}</span>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2" id="badge-${p.id}">
                         ${p.verified ? '<span class="text-[10px] font-mono bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">VERIFIED</span>' : '<span class="text-[10px] font-mono bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">UNVERIFIED</span>'}
                         ${p.failures > 0 ? `<span class="text-[10px] font-mono bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">${p.failures} FAILS</span>` : ''}
+                        ${p.limits ? `<span class="text-[10px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">${p.limits}</span>` : ''}
+                    </div>
+                    <div class="flex items-center gap-2">
                         <button onclick="toggleEditProvider('${p.id}')" class="text-slate-400 hover:text-[#00c2ff] transition" title="Edit"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
                         <button onclick="removeProvider('${p.id}')" class="text-slate-400 hover:text-rose-500 transition" title="Remove"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                     </div>
@@ -177,6 +180,7 @@
         llmConfig.providers.push({ id: newId, name: 'OpenAI', model: '', api_key: '', verified: false, failures: 0 });
         if (!llmConfig.primary) llmConfig.primary = newId;
         renderProviders();
+        saveSettings(true);
     }
 
     function removeProvider(id) {
@@ -185,21 +189,32 @@
             llmConfig.primary = llmConfig.providers.length > 0 ? llmConfig.providers[0].id : "";
         }
         renderProviders();
+        saveSettings(true);
     }
 
     function updateProvider(id, field, value) {
         const p = llmConfig.providers.find(x => x.id === id);
         if (p) {
             p[field] = value;
-            p.verified = false; // Reset verification on change
+            p.verified = false;
             p.failures = 0;
-            renderProviders();
+            
+            if (field === 'name') {
+                renderProviders();
+            } else {
+                // Visually update badge without full re-render
+                const badge = document.getElementById('badge-' + id);
+                if (badge) {
+                    badge.innerHTML = '<span class="text-[10px] font-mono bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">UNVERIFIED</span>';
+                }
+            }
         }
     }
 
     function setPrimary(id) {
         llmConfig.primary = id;
         renderProviders();
+        saveSettings(true);
     }
 
     async function verifyProvider(id) {
@@ -217,12 +232,32 @@
         if (data.verified) {
             p.verified = true;
             p.failures = 0;
+            
+            // Format usage limits
+            if (data.usage) {
+                if (data.usage.type === 'tokens' && data.usage.remaining_requests) {
+                    p.limits = `${parseInt(data.usage.remaining_requests).toLocaleString()} REQ LEFT`;
+                } else if (data.usage.type === 'credits' && data.usage.remaining) {
+                    p.limits = `${data.usage.remaining} BAL`;
+                } else if (data.usage.type === 'requests' && data.usage.remaining_requests) {
+                    p.limits = `${data.usage.remaining_requests} REQ LEFT`;
+                } else if (data.usage.type === 'local') {
+                    p.limits = '∞';
+                } else {
+                    p.limits = '';
+                }
+            } else {
+                p.limits = '';
+            }
+            
             showToast('Connection verified successfully!', 'success');
         } else {
             p.verified = false;
+            p.limits = '';
             showToast('Verification failed: ' + data.message, 'error');
         }
         renderProviders();
+        saveSettings(true);
     }
 
     function syncSettingsToggles(room) {
@@ -261,7 +296,7 @@
         document.getElementById('target-room').value = newRoom;
     }
 
-    async function saveSettings() {
+    async function saveSettings(silent = false) {
         llmConfig.auto_failover = document.getElementById('auto-failover').checked;
         const payload = {
             llm_config: llmConfig,
@@ -278,10 +313,10 @@
         });
         
         if (res.ok) {
-            showToast('Settings saved successfully!', 'success');
+            if (!silent) showToast('Settings saved successfully!', 'success');
             fetchState();
         } else {
-            showToast('Failed to save settings.', 'error');
+            if (!silent) showToast('Failed to save settings.', 'error');
         }
     }
     fetchState();

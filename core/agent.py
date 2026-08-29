@@ -119,7 +119,7 @@ def run_agent_cycle() -> dict:
         def update_llm_config_cb(new_config):
             set_setting("llm_config", json.dumps(new_config))
             
-        payload = generate_with_failover(llm_config, context_data, system_prompt, db_update_callback=update_llm_config_cb)
+        payload, usage_stats = generate_with_failover(llm_config, context_data, system_prompt, db_update_callback=update_llm_config_cb)
 
         # Fallback if LLM fails
         if not payload or payload.startswith("Error"):
@@ -129,8 +129,10 @@ def run_agent_cycle() -> dict:
             )
             return {"status": "error", "message": err}
 
-        # Save the latest payload
+        # Save the latest payload and usage stats
         set_setting("latest_payload", payload)
+        if usage_stats:
+            set_setting("provider_usage", json.dumps(usage_stats))
 
         # 4. Sign and Post
         try:
