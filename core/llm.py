@@ -6,6 +6,7 @@ import requests
 
 def verify_llm_connection(provider: str, api_key: str, llm_model: str) -> Tuple[bool, str, dict]:
     """Tests the LLM connection with a tiny payload and extracts initial limits."""
+    api_key = api_key.strip() if api_key else ""
     if not api_key and provider != "Ollama":
         return False, "API Key missing.", {}
 
@@ -66,7 +67,7 @@ def verify_llm_connection(provider: str, api_key: str, llm_model: str) -> Tuple[
             usage_stats = {"type": "local", "status": "∞ Infinite"}
 
         return True, text_result, usage_stats
-    except Exception as e:
+    except (Exception) as e:
         return False, str(e), {}
 
 
@@ -81,7 +82,7 @@ def fetch_openrouter_limits(api_key: str) -> dict:
             if limit is not None and usage is not None:
                 remaining = float(limit) - float(usage)
                 return {"type": "credits", "remaining": f"${remaining:.4f}"}
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         logging.warning(f"Failed to fetch OpenRouter limits: {e}")
     return {}
 
@@ -90,6 +91,8 @@ def generate_payload(
     provider: str, api_key: str, llm_model: str, context: str, system_prompt: str
 ) -> Tuple[str, dict]:
     """Uses the configured LLM to generate the payload and extracts rate limits/usage."""
+    api_key = api_key.strip() if api_key else ""
+    api_key = api_key.strip() if api_key else ""
     if not api_key and provider != "Ollama":
         logging.error("API key missing for LLM provider.")
         return "Error: API Key missing.", {}
@@ -165,7 +168,7 @@ def generate_payload(
 
         return text_result, usage_stats
         
-    except Exception as e:
+    except (ValueError, RuntimeError, ConnectionError, TypeError, openai.APIError) as e:
         logging.error(f"Error generating LLM payload: {e}")
         return f"Error generating payload: {e}", {}
 

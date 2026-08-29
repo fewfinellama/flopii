@@ -68,19 +68,10 @@ async def autonomous_agent_loop():
             else:
                 pass
 
-        except Exception as e:
+        except (ValueError, RuntimeError, ConnectionError, KeyError) as e:
             print(f"[AUTONOMOUS LOOP] Error in loop iteration: {e}")
 
         await asyncio.sleep(interval_min * 60)
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    init_db()
-    task = asyncio.create_task(autonomous_agent_loop())
-    yield
-    task.cancel()
-
 
 
 @asynccontextmanager
@@ -188,7 +179,7 @@ def get_inbox():
         messages = fetch_room(mailbox_room)
         # Reverse to show newest first
         return {"messages": messages[::-1]}
-    except Exception as e:
+    except (ValueError, RuntimeError, ConnectionError) as e:
         import logging
 
         logging.error(f"Error fetching inbox: {e}")
@@ -224,7 +215,7 @@ def create_identity(payload: IdentityPayload):
         set_setting("agent_did", new_did)
         set_setting("agent_passphrase", payload.passphrase)
         return {"status": "success", "did": new_did}
-    except Exception as e:
+    except (ValueError, TypeError, KeyError) as e:
         return {"error": str(e)}
 
 
@@ -236,7 +227,7 @@ async def upload_identity(file: UploadFile = File(...), passphrase: str = Form("
         set_setting("agent_did", new_did)
         set_setting("agent_passphrase", passphrase)
         return {"status": "success", "did": new_did}
-    except Exception as e:
+    except (ValueError, TypeError, KeyError) as e:
         return {"error": str(e)}
 
 
