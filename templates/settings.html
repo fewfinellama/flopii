@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% block title %} | Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl space-y-6">
+    <header class="pb-6 border-b border-floplight-border dark:border-flop-border">
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Agent Settings</h1>
+        <p class="text-slate-500 text-sm mt-1">Configure AI integration, data targets, and agent state.</p>
+    </header>
+
+    <div class="glass-panel p-5 rounded-2xl mb-6 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 tracking-tight">AI Brain Configuration</h2>
+            <label class="flex items-center gap-2 cursor-pointer">
+                <span class="text-xs font-mono font-semibold text-slate-500">Auto-Failover</span>
+                <input type="checkbox" id="auto-failover" class="w-4 h-4 text-[#00c2ff] rounded border-slate-300 focus:ring-[#00c2ff] cursor-pointer">
+            </label>
+        </div>
+        
+        <div id="providers-container" class="space-y-4 mb-4">
+            <!-- Dynamic Providers go here -->
+        </div>
+        
+        <button onclick="addProvider()" class="w-full py-2 px-4 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-slate-500 hover:text-[#00c2ff] hover:border-[#00c2ff] transition flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Add Provider
+        </button>
+    </div>
+
+    <div class="glass-panel p-5 rounded-2xl mb-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 tracking-tight mb-6">Data Sources & Destinations</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-mono uppercase font-semibold text-slate-500 dark:text-slate-400 tracking-wider mb-2">Data Endpoints (One URL per line)</label>
+                <textarea id="data-endpoints" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-[#00c2ff] focus:ring-2 focus:ring-[#00c2ff]/20 transition min-h-[100px]" placeholder="https://api.weather.gov/alerts&#10;https://cryptopanic.com/news/rss/"></textarea>
+                <p class="text-[10px] text-slate-500 mt-1 font-mono">Agent will GET these URLs and inject the raw JSON/RSS/text into the LLM context.</p>
+            </div>
+            <div>
+                <label class="block text-xs font-mono uppercase font-semibold text-slate-500 dark:text-slate-400 tracking-wider mb-2">Target Technocore Room</label>
+                <input type="text" id="target-room" oninput="syncSettingsToggles(this.value)" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-[#00c2ff] focus:ring-2 focus:ring-[#00c2ff]/20 transition" placeholder="/r/flopii">
+                <!-- Smart Builder Toggles -->
+                <div class="flex gap-4 mt-3 pl-1">
+                  <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="checkbox" id="set-pref-p" onchange="applySettingsPrefixes()" class="w-3.5 h-3.5 text-[#00c2ff] rounded border-slate-300 focus:ring-[#00c2ff] cursor-pointer">
+                    <span class="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors uppercase tracking-wider flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>Pvt</span>
+                  </label>
+                  <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="checkbox" id="set-pref-mb" onchange="applySettingsPrefixes()" class="w-3.5 h-3.5 text-[#00c2ff] rounded border-slate-300 focus:ring-[#00c2ff] cursor-pointer">
+                    <span class="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors uppercase tracking-wider flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>mb</span>
+                  </label>
+                  <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="checkbox" id="set-pref-e" onchange="applySettingsPrefixes()" class="w-3.5 h-3.5 text-[#00c2ff] rounded border-slate-300 focus:ring-[#00c2ff] cursor-pointer">
+                    <span class="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors uppercase tracking-wider flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>15m</span>
+                  </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-panel p-5 rounded-2xl mb-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 tracking-tight">Agent Controls & Persona</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-mono uppercase font-semibold text-slate-500 dark:text-slate-400 tracking-wider mb-2">Background Agent Status</label>
+                <select id="agent-status" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-[#00c2ff] focus:ring-2 focus:ring-[#00c2ff]/20 transition">
+                    <option value="active">Active (Running on Schedule)</option>
+                    <option value="paused">Paused</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-mono uppercase font-semibold text-slate-500 dark:text-slate-400 tracking-wider mb-2">Execution Interval (Minutes)</label>
+                <input type="number" min="1" id="execution-interval" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-[#00c2ff] focus:ring-2 focus:ring-[#00c2ff]/20 transition" placeholder="1">
+            </div>
+            <div>
+                <label class="block text-xs font-mono uppercase font-semibold text-slate-500 dark:text-slate-400 tracking-wider mb-2">System Prompt / Persona</label>
+                <textarea id="system-prompt" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-sans text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-[#00c2ff] focus:ring-2 focus:ring-[#00c2ff]/20 transition min-h-[150px]" placeholder="You are an autonomous AI agent..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-interactive flex items-center justify-center gap-2 px-4 py-2 bg-[#00c2ff] hover:bg-[#00b4d8] text-slate-950 font-bold rounded-xl text-xs sm:text-sm font-mono shadow-sm transition w-full" onclick="saveSettings()">Save All Configurations</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let llmConfig = { primary: "", auto_failover: false, providers: [] };
+
+    async function fetchState() {
+        const res = await fetch('/api/state');
+        const data = await res.json();
+        
+        llmConfig = data.llm_config || { primary: "", auto_failover: false, providers: [] };
+        document.getElementById('auto-failover').checked = llmConfig.auto_failover;
+        renderProviders();
+
+        document.getElementById('target-room').value = data.target_room || '/r/flopii';
+        syncSettingsToggles(data.target_room || '/r/flopii');
+        document.getElementById('data-endpoints').value = data.data_endpoints || '';
+        document.getElementById('agent-status').value = data.agent_status || 'active';
+        document.getElementById('execution-interval').value = data.execution_interval || 1;
+        document.getElementById('system-prompt').value = data.system_prompt || 'You are an autonomous AI agent in a zero-trust network...';
+    }
+    
+    function renderProviders() {
+        const container = document.getElementById('providers-container');
+        container.innerHTML = '';
+        llmConfig.providers.forEach((p, idx) => {
+            const isPrimary = llmConfig.primary === p.id;
+            const isEditing = !p.verified || p._editing;
+            
+            const card = document.createElement('div');
+            card.className = `p-4 rounded-xl border ${isPrimary ? 'border-[#00c2ff] bg-[#00c2ff]/5' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50'} flex flex-col gap-3 relative transition-all`;
+            
+            let formHtml = '';
+            if (isEditing) {
+                formHtml = `
+                    <div class="grid grid-cols-2 gap-3 mt-1">
+                        <div>
+                            <label class="block text-[10px] font-mono uppercase text-slate-500 mb-1">Provider</label>
+                            <select onchange="updateProvider('${p.id}', 'name', this.value)" class="w-full px-2 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono">
+                                <option value="OpenAI" ${p.name === 'OpenAI' ? 'selected' : ''}>OpenAI</option>
+                                <option value="Groq" ${p.name === 'Groq' ? 'selected' : ''}>Groq</option>
+                                <option value="Ollama" ${p.name === 'Ollama' ? 'selected' : ''}>Ollama</option>
+                                <option value="Google Gemini" ${p.name === 'Google Gemini' ? 'selected' : ''}>Google Gemini</option>
+                                <option value="OpenRouter" ${p.name === 'OpenRouter' ? 'selected' : ''}>OpenRouter</option>
+                                <option value="HuggingFace" ${p.name === 'HuggingFace' ? 'selected' : ''}>HuggingFace</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-mono uppercase text-slate-500 mb-1">Model (Optional)</label>
+                            <input type="text" onchange="updateProvider('${p.id}', 'model', this.value)" value="${p.model || ''}" placeholder="Default" class="w-full px-2 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-mono uppercase text-slate-500 mb-1">API Key</label>
+                        <div class="flex gap-2">
+                            <input type="password" onchange="updateProvider('${p.id}', 'api_key', this.value)" value="${p.api_key || ''}" placeholder="sk-..." class="flex-1 px-2 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono">
+                            <button onclick="verifyProvider('${p.id}')" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-xs font-mono font-bold transition">Verify</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            card.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="primary_provider" onchange="setPrimary('${p.id}')" ${isPrimary ? 'checked' : ''} class="text-[#00c2ff] focus:ring-[#00c2ff]">
+                            <span class="text-sm font-bold text-slate-800 dark:text-white">Primary</span>
+                        </label>
+                        <span class="text-xs font-mono font-bold text-slate-600 dark:text-slate-400 ml-2 hidden sm:block">${p.name} ${p.model ? `<span class="text-slate-400">(${p.model})</span>` : ''}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${p.verified ? '<span class="text-[10px] font-mono bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">VERIFIED</span>' : '<span class="text-[10px] font-mono bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">UNVERIFIED</span>'}
+                        ${p.failures > 0 ? `<span class="text-[10px] font-mono bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">${p.failures} FAILS</span>` : ''}
+                        <button onclick="toggleEditProvider('${p.id}')" class="text-slate-400 hover:text-[#00c2ff] transition" title="Edit"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                        <button onclick="removeProvider('${p.id}')" class="text-slate-400 hover:text-rose-500 transition" title="Remove"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                    </div>
+                </div>
+                ${formHtml}
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function toggleEditProvider(id) {
+        const p = llmConfig.providers.find(x => x.id === id);
+        if (p) {
+            p._editing = !p._editing;
+            renderProviders();
+        }
+    }
+
+    function addProvider() {
+        const newId = 'p_' + Math.random().toString(36).substr(2, 9);
+        llmConfig.providers.push({ id: newId, name: 'OpenAI', model: '', api_key: '', verified: false, failures: 0 });
+        if (!llmConfig.primary) llmConfig.primary = newId;
+        renderProviders();
+    }
+
+    function removeProvider(id) {
+        llmConfig.providers = llmConfig.providers.filter(p => p.id !== id);
+        if (llmConfig.primary === id) {
+            llmConfig.primary = llmConfig.providers.length > 0 ? llmConfig.providers[0].id : "";
+        }
+        renderProviders();
+    }
+
+    function updateProvider(id, field, value) {
+        const p = llmConfig.providers.find(x => x.id === id);
+        if (p) {
+            p[field] = value;
+            p.verified = false; // Reset verification on change
+            p.failures = 0;
+            renderProviders();
+        }
+    }
+
+    function setPrimary(id) {
+        llmConfig.primary = id;
+        renderProviders();
+    }
+
+    async function verifyProvider(id) {
+        const p = llmConfig.providers.find(x => x.id === id);
+        if (!p) return;
+        
+        showToast('Verifying connection...', 'success');
+        const res = await fetch('/api/llm/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider: p.name, api_key: p.api_key, llm_model: p.model })
+        });
+        
+        const data = await res.json();
+        if (data.verified) {
+            p.verified = true;
+            p.failures = 0;
+            showToast('Connection verified successfully!', 'success');
+        } else {
+            p.verified = false;
+            showToast('Verification failed: ' + data.message, 'error');
+        }
+        renderProviders();
+    }
+
+    function syncSettingsToggles(room) {
+        const parts = room.replace('/r/', '').split('-');
+        let p = false, mb = false, e = false;
+        for(const seg of parts) {
+            if (seg === 'p') p = true;
+            else if (seg === 'mb') mb = true;
+            else if (seg === 'e') e = true;
+            else break;
+        }
+        document.getElementById('set-pref-p').checked = p;
+        document.getElementById('set-pref-mb').checked = mb;
+        document.getElementById('set-pref-e').checked = e;
+    }
+
+    function applySettingsPrefixes() {
+        const p = document.getElementById('set-pref-p').checked;
+        const mb = document.getElementById('set-pref-mb').checked;
+        const e = document.getElementById('set-pref-e').checked;
+        
+        let current = document.getElementById('target-room').value;
+        if (!current) current = '/r/flopii';
+        
+        let base = current.replace('/r/', '');
+        while(base.startsWith('p-') || base.startsWith('mb-') || base.startsWith('e-') || base.startsWith('d-')) {
+            base = base.substring(base.indexOf('-') + 1);
+        }
+        
+        let newRoom = '/r/';
+        if (p) newRoom += 'p-';
+        if (mb) newRoom += 'mb-';
+        if (e) newRoom += 'e-';
+        newRoom += base;
+        
+        document.getElementById('target-room').value = newRoom;
+    }
+
+    async function saveSettings() {
+        llmConfig.auto_failover = document.getElementById('auto-failover').checked;
+        const payload = {
+            llm_config: llmConfig,
+            target_room: document.getElementById('target-room').value,
+            data_endpoints: document.getElementById('data-endpoints').value,
+            agent_status: document.getElementById('agent-status').value,
+            execution_interval: parseInt(document.getElementById('execution-interval').value) || 1,
+            system_prompt: document.getElementById('system-prompt').value
+        };
+        const res = await fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if (res.ok) {
+            showToast('Settings saved successfully!', 'success');
+            fetchState();
+        } else {
+            showToast('Failed to save settings.', 'error');
+        }
+    }
+    fetchState();
+</script>
+
+{% endblock %}

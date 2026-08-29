@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %} | Identity{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <header class="pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight font-mono uppercase">Identity Management</h1>
+        <p class="text-slate-500 text-sm mt-1">Manage your Ed25519 decentralized identifier (DID).</p>
+    </header>
+
+    <!-- Current Identity Status -->
+    <div id="did-display-container" class="hidden glass-panel p-5 rounded-2xl shadow-sm border border-emerald-500/30 bg-emerald-50/10 dark:bg-emerald-900/10">
+        <h3 class="text-emerald-600 dark:text-emerald-400 font-bold mb-2 flex items-center gap-2 font-mono uppercase text-xs tracking-wider">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Active Identity
+        </h3>
+        <p id="did-display" class="font-mono text-sm text-slate-700 dark:text-slate-300 break-all mb-3"></p>
+        
+        <h4 class="text-[10px] font-mono uppercase font-bold text-emerald-700 dark:text-emerald-500 tracking-widest mb-1 mt-3">Agent Mailbox (Private)</h4>
+        <p id="mailbox-display" class="font-mono text-sm text-slate-700 dark:text-slate-300 break-all mb-4"></p>
+        
+        <a href="/api/identity/download" id="download-btn" class="inline-flex btn-interactive items-center justify-center gap-2 px-3 py-2 bg-emerald-100 dark:bg-emerald-900/40 hover:bg-emerald-200 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-xl font-mono font-medium shadow-sm text-xs transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Backup identity.pem
+        </a>
+    </div>
+
+    <!-- Generate New Identity -->
+    <div class="glass-panel p-5 rounded-2xl shadow-sm">
+        <label class="block text-xs font-mono uppercase font-semibold text-slate-500 dark:text-slate-400 tracking-wider mb-2">Create New Identity</label>
+        <p class="text-xs text-slate-500 mb-4">Generate a fresh Ed25519 keypair. This will override any existing loaded identity.</p>
+        <div class="flex flex-col sm:flex-row gap-3">
+            <input type="password" id="gen-pass" class="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-[#00c2ff] focus:ring-2 focus:ring-[#00c2ff]/20 transition" placeholder="Encryption Passphrase (Optional)">
+            <button class="btn-interactive flex items-center justify-center gap-2 px-4 py-2 bg-[#00c2ff] hover:bg-[#00b4d8] text-slate-950 font-bold rounded-xl text-xs sm:text-sm font-mono shadow-sm transition whitespace-nowrap" onclick="generateIdentity()">Generate DID</button>
+        </div>
+    </div>
+    
+    <!-- Import Identity -->
+    <div class="glass-panel p-5 rounded-2xl shadow-sm">
+        <label class="block text-xs font-mono uppercase font-semibold text-slate-500 dark:text-slate-400 tracking-wider mb-2">Import Existing Identity</label>
+        <p class="text-xs text-slate-500 mb-4">Upload an existing <code class="text-cyan-600 dark:text-cyan-400">identity.pem</code> file.</p>
+        <form id="import-form" class="space-y-4" onsubmit="importIdentity(event)">
+            <div class="relative bg-slate-50 dark:bg-slate-950/80 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-4 text-center hover:border-[#00c2ff] transition">
+                <input type="file" id="import-file" accept=".pem" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="document.getElementById('file-name').innerText = this.files[0] ? this.files[0].name : 'Choose file...'">
+                <div class="text-sm font-mono text-slate-500 pointer-events-none flex flex-col items-center justify-center gap-2">
+                    <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    <span id="file-name">Click or drag identity.pem here</span>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="password" id="import-pass" class="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-[#00c2ff] focus:ring-2 focus:ring-[#00c2ff]/20 transition" placeholder="Passphrase (if encrypted)">
+                <button type="submit" class="btn-interactive flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-900/80 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm font-mono font-medium shadow-sm whitespace-nowrap">Import Identity</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function fetchState() {
+        const res = await fetch('/api/state');
+        const data = await res.json();
+        
+        if (data.did) {
+            document.getElementById('did-display-container').classList.remove('hidden');
+            document.getElementById('did-display').innerText = data.did;
+            document.getElementById('mailbox-display').innerText = data.agent_mailbox;
+        }
+    }
+
+    async function generateIdentity() {
+        const pass = document.getElementById('gen-pass').value;
+        const res = await fetch('/api/identity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ passphrase: pass })
+        });
+        const data = await res.json();
+        if (data.error) alert(data.error);
+        else {
+            alert('Identity Generated: ' + data.did);
+            fetchState();
+            document.getElementById('gen-pass').value = '';
+        }
+    }
+
+    async function importIdentity(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('import-file');
+        const passInput = document.getElementById('import-pass');
+        
+        if (!fileInput.files[0]) {
+            alert('Error: Please select an identity.pem file');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('passphrase', passInput.value);
+
+        const res = await fetch('/api/identity/import', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        
+        if (data.error) alert('Error: ' + data.error);
+        else {
+            alert('Identity Imported successfully!');
+            fetchState();
+            fileInput.value = '';
+            passInput.value = '';
+            document.getElementById('file-name').innerText = 'Click or drag identity.pem here';
+        }
+    }
+
+    fetchState();
+</script>
+{% endblock %}

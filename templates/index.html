@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% block title %} | Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-enter">
+<!-- Room Details / Agent Metrics Parent Card -->
+<div class="glass-panel p-4 sm:p-5 rounded-2xl flex flex-col gap-4">
+  <!-- Header row -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <div class="flex items-center gap-3">
+        <h1 class="text-xl sm:text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-white" id="main-target-room">/r/flopii</h1>
+        <div class="flex gap-2">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/50">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Active
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-cyan-50 dark:bg-cyan-950/30 text-cyan-700 dark:text-[#00c2ff] border border-cyan-200 dark:border-cyan-800/50 cursor-pointer hover:bg-cyan-100 transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            View Diagnostics
+          </span>
+        </div>
+      </div>
+      <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Autonomous Agent Stream</p>
+    </div>
+  </div>
+
+  <hr class="border-slate-200 dark:border-slate-800/80 my-1">
+
+      <!-- Stats Grid (4 cols on lg) -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="stats-grid">
+    <!-- Skeletons shown until data loads -->
+    <div class="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-xl flex flex-col gap-2">
+      <div class="skeleton h-3 w-20 rounded"></div>
+      <div class="skeleton h-7 w-12 rounded mt-1"></div>
+    </div>
+    <div class="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-xl flex flex-col gap-2">
+      <div class="skeleton h-3 w-24 rounded"></div>
+      <div class="skeleton h-7 w-10 rounded mt-1"></div>
+    </div>
+    <div class="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-xl flex flex-col gap-2">
+      <div class="skeleton h-3 w-28 rounded"></div>
+      <div class="skeleton h-7 w-10 rounded mt-1"></div>
+    </div>
+    <div class="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-xl flex flex-col gap-2">
+      <div class="skeleton h-3 w-20 rounded"></div>
+      <div class="skeleton h-7 w-16 rounded mt-1"></div>
+    </div>
+  </div>
+</div>
+
+<div class="flex items-center justify-between mb-4 mt-8">
+    <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight font-mono uppercase">Recent Agent Executions</h2>
+    <button id="force-run-btn" onclick="forceRun()" class="btn-interactive relative px-3 py-1.5 bg-[#00c2ff] hover:bg-[#00b4d8] text-slate-950 font-bold rounded-full text-xs font-mono shadow-sm transition flex items-center gap-2 overflow-hidden">
+        <!-- Cooldown sweep overlay -->
+        <span id="cooldown-overlay" class="absolute inset-0 rounded-full hidden origin-left" style="background: rgba(0,0,0,0.35);"></span>
+        <!-- Spinning ring shown during cooldown -->
+        <svg id="run-spinner" class="w-3.5 h-3.5 hidden animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <!-- Play icon shown when ready -->
+        <svg id="run-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span id="run-label">Force Run Now</span>
+    </button>
+</div>
+
+
+<!-- Execution Feed: Skeleton placeholders until data loads -->
+<div id="execution-feed" class="flex flex-col gap-4">
+  <div class="glass-panel rounded-xl px-4 py-3 flex flex-col gap-2">
+    <div class="flex items-center gap-3"><div class="skeleton h-4 w-16 rounded-full"></div><div class="skeleton h-3 w-32 rounded"></div></div>
+    <div class="skeleton h-3 w-full rounded"></div>
+  </div>
+  <div class="glass-panel rounded-xl px-4 py-3 flex flex-col gap-2">
+    <div class="flex items-center gap-3"><div class="skeleton h-4 w-16 rounded-full"></div><div class="skeleton h-3 w-24 rounded"></div></div>
+    <div class="skeleton h-3 w-4/5 rounded"></div>
+  </div>
+  <div class="glass-panel rounded-xl px-4 py-3 flex flex-col gap-2">
+    <div class="flex items-center gap-3"><div class="skeleton h-4 w-16 rounded-full"></div><div class="skeleton h-3 w-28 rounded"></div></div>
+    <div class="skeleton h-3 w-3/5 rounded"></div>
+  </div>
+  <div class="glass-panel rounded-xl px-4 py-3 flex flex-col gap-2">
+    <div class="flex items-center gap-3"><div class="skeleton h-4 w-16 rounded-full"></div><div class="skeleton h-3 w-36 rounded"></div></div>
+    <div class="skeleton h-3 w-2/3 rounded"></div>
+  </div>
+  <div class="glass-panel rounded-xl px-4 py-3 flex flex-col gap-2">
+    <div class="flex items-center gap-3"><div class="skeleton h-4 w-16 rounded-full"></div><div class="skeleton h-3 w-20 rounded"></div></div>
+    <div class="skeleton h-3 w-4/5 rounded"></div>
+  </div>
+</div>
+<div class="text-right mt-2">
+  <a href="/logs" class="text-xs font-mono text-slate-400 hover:text-[#00c2ff] transition-colors">View all in Audit Logs →</a>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleCard(id) {
+        const el = document.getElementById(id);
+        const btn = el.previousElementSibling;
+        const isHidden = el.classList.contains('hidden');
+        el.classList.toggle('hidden');
+        btn.innerText = isHidden ? 'See less' : 'See more';
+    }
+
+    async function fetchState() {
+        const res = await fetch('/api/state');
+        const data = await res.json();
+
+        document.getElementById('main-target-room').innerText = data.target_room || '/r/flopii';
+
+        // Replace skeleton stats grid with real cards
+        const grid = document.getElementById('stats-grid');
+        const isOnline = data.agent_status === 'active';
+        const stats = data.stats || {};
+        const successRate = stats.success_rate_24h !== undefined ? stats.success_rate_24h : 100;
+        const totalExec = stats.total_executions || 0;
+        const inboxCmds = data.mailbox_commands || 0;
+        
+        // Format last active time
+        let lastActiveStr = 'Never';
+        if (stats.last_active) {
+            // Using time only for brevity on the card
+            const d = new Date(stats.last_active + 'Z');
+            lastActiveStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        grid.innerHTML = `
+          <div class="bg-slate-50 dark:bg-slate-950/60 border p-3.5 rounded-xl flex flex-col transition-all relative overflow-hidden border-emerald-200 dark:border-emerald-800/60 hover:border-emerald-300" id="health-card">
+            <div class="flex items-center justify-between z-10">
+              <span class="text-xs font-mono text-emerald-600 dark:text-emerald-400" id="health-label">Success Rate (24h)</span>
+              <div class="w-8 h-0.5 rounded bg-emerald-500" id="health-sparkline"></div>
+            </div>
+            <span id="stat-status" class="text-xl sm:text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1 z-10">${successRate}%</span>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-xl flex flex-col transition-all hover:border-slate-300 dark:hover:border-slate-700">
+            <span class="text-xs font-mono text-slate-500 dark:text-slate-400">Total Executions</span>
+            <span id="stat-total" class="text-xl sm:text-2xl font-bold font-mono text-slate-900 dark:text-white mt-1">${totalExec}</span>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-xl flex flex-col transition-all hover:border-cyan-300 dark:hover:border-cyan-700">
+            <span class="text-xs font-mono text-[#00c2ff]">Mailbox Commands</span>
+            <span id="stat-signed" class="text-xl sm:text-2xl font-bold font-mono text-cyan-700 dark:text-[#00c2ff] mt-1">${inboxCmds}</span>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-xl flex flex-col transition-all hover:border-amber-300 dark:hover:border-amber-700">
+            <span class="text-xs font-mono text-amber-600 dark:text-amber-500">Last Active</span>
+            <span class="text-xl sm:text-2xl font-bold font-mono text-amber-700 dark:text-amber-500 mt-1 flex items-baseline gap-1">
+              <span id="stat-velocity">${lastActiveStr}</span>
+            </span>
+          </div>
+        `;
+        grid.classList.add('page-enter');
+        if (data.logs && data.logs.length > 0) {
+            const feed = document.getElementById('execution-feed');
+            feed.innerHTML = '';
+
+            let cardIndex = 0;
+            const recentLogs = data.logs.slice(0, 5);
+            recentLogs.forEach(log => {
+                const isSuccess = log.status === 'Success';
+                const idx = cardIndex++;
+                const preview = log.payload ? log.payload.split('\n').slice(0, 2).join(' · ').substring(0, 120) : '—';
+                const badgeCls = isSuccess
+                    ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700'
+                    : 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400 border-rose-300 dark:border-rose-700';
+                
+                const card = document.createElement('div');
+                card.className = "glass-panel rounded-xl px-4 py-3 flex flex-col gap-2";
+                card.innerHTML = `
+                  <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <div class="flex items-center">
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${isSuccess ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-400'}">${log.status}</span>
+                      <span class="font-mono text-[11px] text-slate-400 dark:text-slate-500 hidden sm:inline ml-2 truncate">· ${log.timestamp} · ${log.target_room}</span>
+                      ${getRoomBadges(log.target_room)}
+                    </div>
+                    <button onclick="toggleCard('payload-${idx}')" class="text-[11px] font-mono text-[#00c2ff] hover:underline flex-shrink-0">See more</button>
+                  </div>
+                  <p class="text-xs text-slate-600 dark:text-slate-400 font-sans truncate">${preview}</p>
+                  <div id="payload-${idx}" class="hidden text-xs font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap bg-slate-100 dark:bg-slate-900/60 rounded-lg p-3 border border-slate-200 dark:border-slate-800 mt-1">${log.payload}</div>
+                `;
+                feed.appendChild(card);
+            });
+
+        }
+    }
+
+    const COOLDOWN_MS = 60000; // 60 seconds
+    let cooldownInterval = null;
+
+    function startCooldown() {
+        const btn = document.getElementById('force-run-btn');
+        const label = document.getElementById('run-label');
+        const icon = document.getElementById('run-icon');
+        const spinner = document.getElementById('run-spinner');
+        const overlay = document.getElementById('cooldown-overlay');
+
+        const endTime = Date.now() + COOLDOWN_MS;
+        localStorage.setItem('flopii-run-cooldown', endTime);
+
+        btn.disabled = true;
+        btn.classList.remove('bg-[#00c2ff]', 'hover:bg-[#00b4d8]', 'cursor-pointer');
+        btn.classList.add('bg-slate-400', 'dark:bg-slate-600', 'cursor-not-allowed', 'opacity-80');
+        icon.classList.add('hidden');
+        spinner.classList.remove('hidden');
+        overlay.classList.remove('hidden');
+
+        cooldownInterval = setInterval(() => {
+            const remaining = Math.ceil((endTime - Date.now()) / 1000);
+            if (remaining <= 0) {
+                clearInterval(cooldownInterval);
+                resetButton();
+                return;
+            }
+            label.innerText = `Cooldown ${remaining}s`;
+            // Animate the sweep overlay width to show progress
+            const pct = ((COOLDOWN_MS - (endTime - Date.now())) / COOLDOWN_MS) * 100;
+            overlay.style.width = `${100 - pct}%`;
+        }, 250);
+    }
+
+    function resetButton() {
+        const btn = document.getElementById('force-run-btn');
+        const label = document.getElementById('run-label');
+        const icon = document.getElementById('run-icon');
+        const spinner = document.getElementById('run-spinner');
+        const overlay = document.getElementById('cooldown-overlay');
+
+        btn.disabled = false;
+        btn.classList.add('bg-[#00c2ff]', 'hover:bg-[#00b4d8]');
+        btn.classList.remove('bg-slate-400', 'dark:bg-slate-600', 'cursor-not-allowed', 'opacity-80');
+        icon.classList.remove('hidden');
+        spinner.classList.add('hidden');
+        overlay.classList.add('hidden');
+        overlay.style.width = '100%';
+        label.innerText = 'Force Run Now';
+        localStorage.removeItem('flopii-run-cooldown');
+    }
+
+    function checkCooldownOnLoad() {
+        const stored = localStorage.getItem('flopii-run-cooldown');
+        if (stored) {
+            const remaining = parseInt(stored) - Date.now();
+            if (remaining > 0) {
+                // Re-attach cooldown state using shortened remaining time
+                const btn = document.getElementById('force-run-btn');
+                const label = document.getElementById('run-label');
+                const icon = document.getElementById('run-icon');
+                const spinner = document.getElementById('run-spinner');
+                const overlay = document.getElementById('cooldown-overlay');
+
+                btn.disabled = true;
+                btn.classList.remove('bg-[#00c2ff]', 'hover:bg-[#00b4d8]');
+                btn.classList.add('bg-slate-400', 'dark:bg-slate-600', 'cursor-not-allowed', 'opacity-80');
+                icon.classList.add('hidden');
+                spinner.classList.remove('hidden');
+                overlay.classList.remove('hidden');
+
+                const endTime = parseInt(stored);
+                cooldownInterval = setInterval(() => {
+                    const r = Math.ceil((endTime - Date.now()) / 1000);
+                    if (r <= 0) { clearInterval(cooldownInterval); resetButton(); return; }
+                    label.innerText = `Cooldown ${r}s`;
+                    const pct = ((COOLDOWN_MS - (endTime - Date.now())) / COOLDOWN_MS) * 100;
+                    overlay.style.width = `${100 - pct}%`;
+                }, 250);
+            } else {
+                localStorage.removeItem('flopii-run-cooldown');
+            }
+        }
+    }
+
+    async function forceRun() {
+        const btn = document.getElementById('force-run-btn');
+        if (btn.disabled) return;
+
+        startCooldown();
+        showToast('Executing agent...', 'success');
+
+        const res = await fetch('/api/run', { method: 'POST' });
+        const data = await res.json();
+
+        if (data.status === 'error') {
+            showToast(data.message || 'Agent run failed.', 'error');
+        } else {
+            showToast('Agent executed successfully!', 'success');
+            fetchState();
+        }
+    }
+
+    checkCooldownOnLoad();
+    fetchState();
+    
+    // Auto-refresh the dashboard state (executions, status) every 15 seconds
+    setInterval(fetchState, 15000);
+</script>
+{% endblock %}

@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Flopii Agent {% block title %}{% endblock %}</title>
+  <meta name="description" content="Flopii Agent Dashboard">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Use copied Flopscope CSS -->
+  <link rel="stylesheet" href="/static/css/tailwind.min.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <!-- Use Flopii Logo as Favicon -->
+  <link rel="icon" type="image/png" href="/static/images/flopii_logo.png">
+  
+  <script>
+    (function(){
+      var t = localStorage.getItem('flopscope-theme') || 'dark';
+      if (t === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+      } else {
+        document.documentElement.classList.add('light');
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+
+    function toggleTheme() {
+        if (document.documentElement.classList.contains('dark')) {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+            localStorage.setItem('flopscope-theme', 'light');
+        } else {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+            localStorage.setItem('flopscope-theme', 'dark');
+        }
+    }
+  </script>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-cyan-200/60 selection:text-cyan-900 dark:selection:bg-cyan-500/30 dark:selection:text-cyan-200 flop-grid-bg pb-16 lg:pb-0">
+
+  <!-- TOP APP BAR -->
+  <header class="glass-header sticky top-0 z-40 px-3.5 sm:px-6 lg:px-8 py-3 flex justify-center border-b border-slate-200 dark:border-slate-800/80 shadow-sm">
+  <div class="max-w-6xl w-full flex items-center justify-between gap-3">
+    <!-- Brand & Flopii Logo -->
+    <div class="flex items-center gap-3 min-w-0">
+      <a href="/" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 flex items-center justify-center transition-transform duration-300 hover:scale-105">
+        <img src="/static/images/flopii_logo.png" alt="Flopii Logo" class="w-[85%] h-[85%] object-contain" fetchpriority="high" decoding="async" />
+      </a>
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <h1 class="text-sm sm:text-base font-bold tracking-tight font-mono flex items-center gap-1.5 text-slate-900 dark:text-white truncate">
+            <span>FLOP<span class="text-[#00c2ff]">II</span></span>
+          </h1>
+          <span class="text-[10px] sm:text-xs font-mono px-2 py-0.5 rounded-full bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-[#00c2ff] border border-cyan-200 dark:border-cyan-800 flex-shrink-0 font-semibold">
+            $FLOP
+          </span>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 font-sans hidden sm:block truncate">Autonomous Core Pipeline & Controller</p>
+      </div>
+    </div>
+    
+    <!-- Connection Status & Theme Toggle -->
+    <div class="flex items-center gap-2.5">
+      <!-- Connection Badge -->
+      <div id="conn-badge" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border shadow-sm font-mono text-[10px] uppercase tracking-wider font-bold transition-colors bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400">
+        <div id="conn-dot" class="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse"></div>
+        <span id="conn-text">Checking</span>
+      </div>
+
+      <button id="theme-toggle-btn" onclick="toggleTheme()" class="btn-interactive p-2 rounded-xl bg-slate-100 dark:bg-slate-900/80 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition-colors shadow-sm" title="Toggle Theme">
+        <svg id="theme-sun-icon" class="w-4 h-4 text-amber-400 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <svg id="theme-moon-icon" class="w-4 h-4 text-cyan-600 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+        </svg>
+      </button>
+    </div>
+    </div>
+</header>
+
+<!-- Persistent Offline Toast -->
+<div id="offline-toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 px-5 py-3 rounded-full bg-rose-500 text-white shadow-2xl font-mono text-sm font-bold transition-all duration-300 translate-y-[150%] opacity-0 pointer-events-none">
+  <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+  </svg>
+  <span>You are offline</span>
+</div>
+
+<!-- Connection Status Script -->
+<script>
+  function updateConnectionStatus() {
+    const badge = document.getElementById('conn-badge');
+    const dot = document.getElementById('conn-dot');
+    const text = document.getElementById('conn-text');
+    const offlineToast = document.getElementById('offline-toast');
+    
+    if (navigator.onLine) {
+      badge.className = 'hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border shadow-sm font-mono text-[10px] uppercase tracking-wider font-bold transition-colors bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-400';
+      dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
+      text.innerText = 'Connected';
+      
+      // Hide offline toast
+      offlineToast.classList.add('translate-y-[150%]', 'opacity-0');
+      offlineToast.classList.remove('translate-y-0', 'opacity-100');
+    } else {
+      badge.className = 'hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border shadow-sm font-mono text-[10px] uppercase tracking-wider font-bold transition-colors bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/80 text-rose-700 dark:text-rose-400';
+      dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse';
+      text.innerText = 'Offline';
+      
+      // Show offline toast
+      offlineToast.classList.remove('translate-y-[150%]', 'opacity-0');
+      offlineToast.classList.add('translate-y-0', 'opacity-100');
+    }
+  }
+
+  // Check immediately
+  updateConnectionStatus();
+
+  // Listen for native online/offline events
+  window.addEventListener('online', updateConnectionStatus);
+  window.addEventListener('offline', updateConnectionStatus);
+</script>
+
+  
+  <!-- MAIN APP WRAPPER -->
+  <div class="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-5 lg:px-6 py-4 lg:grid lg:grid-cols-[320px_1fr] lg:gap-8 lg:items-start">
+    <!-- DESKTOP LEFT SIDEBAR — sticky via CSS position:sticky on a grid child -->
+    <aside class="hidden lg:block sticky top-[85px]">
+      <div class="flex flex-col gap-4">
+      
+      <!-- Card 1: Navigation -->
+      <div class="glass-panel rounded-2xl p-4 flex-shrink-0 flex flex-col h-fit">
+        <h2 class="text-xs font-mono uppercase font-semibold text-slate-500 dark:text-slate-400 tracking-wider flex items-center justify-between mb-4">
+          AGENT NAVIGATION
+        </h2>
+        <div class="space-y-2">
+          <a href="/" class="{% if active_page == 'home' %}border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-[#00c2ff] shadow-sm{% else %}border-transparent hover:border-slate-200 dark:hover:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900/60 text-slate-600 dark:text-slate-400{% endif %} flex items-center gap-3 w-full p-3 rounded-xl border transition-all cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            <div class="flex-1 min-w-0">
+                <div class="font-mono text-sm font-bold truncate">Dashboard</div>
+            </div>
+          </a>
+
+          <a href="/inbox" class="{% if active_page == 'inbox' %}border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-[#00c2ff] shadow-sm{% else %}border-transparent hover:border-slate-200 dark:hover:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900/60 text-slate-600 dark:text-slate-400{% endif %} flex items-center gap-3 w-full p-3 rounded-xl border transition-all cursor-pointer relative">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+            <div class="flex-1 min-w-0">
+                <div class="font-mono text-sm font-bold truncate">Inbox</div>
+            </div>
+            <span id="desktop-inbox-badge" class="hidden absolute right-4 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-rose-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]"></span>
+          </a>
+
+          <a href="/identity" class="{% if active_page == 'identity' %}border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-[#00c2ff] shadow-sm{% else %}border-transparent hover:border-slate-200 dark:hover:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900/60 text-slate-600 dark:text-slate-400{% endif %} flex items-center gap-3 w-full p-3 rounded-xl border transition-all cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
+            <div class="flex-1 min-w-0">
+                <div class="font-mono text-sm font-bold truncate">Identity</div>
+            </div>
+          </a>
+
+          <a href="/settings" class="{% if active_page == 'settings' %}border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-[#00c2ff] shadow-sm{% else %}border-transparent hover:border-slate-200 dark:hover:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900/60 text-slate-600 dark:text-slate-400{% endif %} flex items-center gap-3 w-full p-3 rounded-xl border transition-all cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+            <div class="flex-1 min-w-0">
+                <div class="font-mono text-sm font-bold truncate">Settings</div>
+            </div>
+          </a>
+
+          <a href="/logs" class="{% if active_page == 'logs' %}border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-[#00c2ff] shadow-sm{% else %}border-transparent hover:border-slate-200 dark:hover:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900/60 text-slate-600 dark:text-slate-400{% endif %} flex items-center gap-3 w-full p-3 rounded-xl border transition-all cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+            <div class="flex-1 min-w-0">
+                <div class="font-mono text-sm font-bold truncate">Audit Logs</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 2: FLOP Banner -->
+      <div class="glass-panel rounded-2xl p-4 flex-shrink-0 flex flex-col gap-3">
+        
+        <div class="rounded-xl overflow-hidden shadow-sm relative group bg-black p-4 flex items-center justify-center flex-col gap-2 border border-slate-200 dark:border-slate-800">
+          <!-- Text-based FLOP logo instead of image to match the screenshot better if needed, or just use the banner -->
+          <img src="/static/images/flop-banner.jpeg" alt="Flopii Agent" class="w-full h-auto object-cover rounded" />
+        </div>
+        
+        <div class="flex items-center gap-1.5 text-[#00c2ff] font-mono font-semibold text-[13px] mt-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+          <span>FLOP Zero-Trust Verifier</span>
+        </div>
+        
+        <p class="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed font-sans font-medium">
+          Signatures are calculated with <code class="text-slate-800 dark:text-slate-200 font-mono text-[10px]">@noble/ed25519</code> directly in browser memory over <code class="text-slate-800 dark:text-slate-200 font-mono text-[10px]">room|nonce|text</code>.
+        </p>
+        <div class="mt-2 pt-3 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+          <span>Created by</span>
+          <a href="#" class="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-[#00c2ff] transition-colors font-bold">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
+            FewFineLlama
+          </a>
+        </div>
+      </div>
+
+      <!-- Post as Human Button inside sidebar -->
+      <button id="post-fab"
+        onclick="openPostModal()"
+        title="Post as Human"
+        class="fab-pulse w-full flex items-center justify-center gap-2.5 px-4 py-3 rounded-2xl font-mono font-bold text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-md"
+        style="background:#00c2ff; color:#000;">
+        <!-- Animated pen icon -->
+        <svg id="fab-icon" class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation: penWiggle 2.5s ease-in-out infinite;">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+        </svg>
+        <span id="fab-label">Post as Human</span>
+      </button>
+    </aside>
+
+    <!-- MAIN FEED CONTAINER -->
+    <main id="feed-container" class="min-w-0 flex flex-col gap-5 lg:gap-6 py-4 px-2 lg:px-0">
+        {% block content %}{% endblock %}
+        
+
+    </main>
+  </div>
+
+  <!-- Mobile Bottom Navigation Bar -->
+  <div class="lg:hidden fixed bottom-0 left-0 right-0 mobile-bottom-bar z-50 flex justify-around items-center px-2">
+      <a href="/" class="p-3 text-slate-500 dark:text-slate-400 hover:text-[#00c2ff] {% if active_page == 'home' %}text-[#00c2ff] dark:text-[#00c2ff]{% endif %}">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+      </a>
+      <a href="/inbox" class="relative p-3 text-slate-500 dark:text-slate-400 hover:text-[#00c2ff] {% if active_page == 'inbox' %}text-[#00c2ff] dark:text-[#00c2ff]{% endif %}">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+          <span id="mobile-inbox-badge" class="hidden absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]"></span>
+      </a>
+      <a href="/identity" class="p-3 text-slate-500 dark:text-slate-400 hover:text-[#00c2ff] {% if active_page == 'identity' %}text-[#00c2ff] dark:text-[#00c2ff]{% endif %}">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
+      </a>
+      <a href="/settings" class="p-3 text-slate-500 dark:text-slate-400 hover:text-[#00c2ff] {% if active_page == 'settings' %}text-[#00c2ff] dark:text-[#00c2ff]{% endif %}">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+      </a>
+      <a href="/logs" class="p-3 text-slate-500 dark:text-slate-400 hover:text-[#00c2ff] {% if active_page == 'logs' %}text-[#00c2ff] dark:text-[#00c2ff]{% endif %}">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+      </a>
+  </div>
+
+    <!-- Custom Toast Alert Container -->
+    <div id="toast-container" class="fixed top-20 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
+    <script>
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const isSuccess = type === 'success';
+            const bgColor = isSuccess ? 'bg-emerald-50 dark:bg-emerald-950/40' : 'bg-rose-50 dark:bg-rose-950/40';
+            const borderColor = isSuccess ? 'border-emerald-200 dark:border-emerald-800' : 'border-rose-200 dark:border-rose-800';
+            const textColor = isSuccess ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400';
+            const icon = isSuccess 
+                ? `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+                : `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
+
+            toast.className = `flex items-center gap-3 p-4 rounded-xl border shadow-xl backdrop-blur-md pointer-events-auto transform transition-all duration-300 translate-y-[-1rem] opacity-0 ${bgColor} ${borderColor} ${textColor}`;
+            toast.innerHTML = `${icon} <span class="font-mono font-medium text-sm shadow-sm">${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    toast.classList.remove('translate-y-[-1rem]', 'opacity-0');
+                    toast.classList.add('translate-y-0', 'opacity-100');
+                });
+            });
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-1rem]', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        window.alert = function(message) {
+            const msg = String(message).toLowerCase();
+            if (msg.includes('error') || msg.includes('fail') || msg.includes('incorrect') || msg.includes('invalid')) {
+                showToast(message, 'error');
+            } else {
+                showToast(message, 'success');
+            }
+        };
+    </script>
+
+    <!-- Scripts Block -->
+    <!-- Global card stagger fade-in (runs on every page) -->
+    <script>
+      (function() {
+        function animateCards() {
+          // Select all "card-like" elements across every page
+          const selectors = [
+            '.glass-panel',
+            '[id="stats-grid"] > div',
+            '.grid > div',
+            'main > div > div',
+          ].join(',');
+
+          const seen = new Set();
+          const cards = Array.from(document.querySelectorAll(selectors)).filter(el => {
+            // Deduplicate and skip elements already inside an animated parent
+            if (seen.has(el)) return false;
+            seen.add(el);
+            // Skip skeleton wrappers inside the stats-grid (they get replaced)
+            if (el.closest('#stats-grid') && el.querySelector('.skeleton')) return false;
+            // Skip the modal backdrops and the modals themselves
+            if (el.closest('#post-modal') || el.closest('#response-modal')) return false;
+            return true;
+          });
+
+          cards.forEach((el, i) => {
+            el.style.setProperty('--card-i', i);
+            el.classList.add('card-fade');
+            // Clean up class after animation so hover states work normally
+            el.addEventListener('animationend', () => {
+              el.classList.remove('card-fade');
+              el.style.removeProperty('--card-i');
+              el.style.opacity = '1';
+              el.style.transform = 'none';
+            }, { once: true });
+          });
+        }
+
+        // Run after the page content is painted
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', animateCards);
+        } else {
+          // Small RAF delay so skeletons render first before we run
+          requestAnimationFrame(() => requestAnimationFrame(animateCards));
+        }
+      })();
+
+      // Global helper to parse Technocore room prefixes and return HTML badges
+      function getRoomBadges(roomName) {
+        if (!roomName) return '';
+        const name = roomName.replace('/r/', '');
+        const segments = name.split('-');
+        let badges = '';
+        let isP = false, isMb = false, isE = false, isD = false;
+        
+        for (const seg of segments) {
+            if (seg === 'p' && !isP) { 
+                isP = true; 
+                badges += `<span title="Private (Unlisted)" class="px-1.5 py-0.5 rounded text-[9px] bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700 flex items-center gap-1 shadow-sm"><svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>Pvt</span>`; 
+            }
+            else if (seg === 'mb' && !isMb) { 
+                isMb = true; 
+                badges += `<span title="Mailbox (Signatures Only)" class="px-1.5 py-0.5 rounded text-[9px] bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 flex items-center gap-1 shadow-sm"><svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>mb</span>`; 
+            }
+            else if (seg === 'e' && !isE) { 
+                isE = true; 
+                badges += `<span title="Ephemeral (15m Decay)" class="px-1.5 py-0.5 rounded text-[9px] bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 flex items-center gap-1 shadow-sm"><svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>15m</span>`; 
+            }
+            else if (seg === 'd' && !isD) { 
+                isD = true; 
+                badges += `<span title="Ownable" class="px-1.5 py-0.5 rounded text-[9px] bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800 flex items-center gap-1 shadow-sm"><svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>d</span>`; 
+            }
+            else break; // First non-prefix segment means we hit the actual room name
+        }
+        return badges ? `<div class="flex gap-1 items-center ml-1.5">${badges}</div>` : '';
+      }
+    </script>
+
+
+    {% block scripts %}{% endblock %}
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  POST AS HUMAN — Floating Action Button + Modal        -->
+<!-- ═══════════════════════════════════════════════════════ -->
+
+
+<!-- Post as Human Modal -->
+<div id="post-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closePostModal()"></div>
+  <div class="relative w-full max-w-lg flex flex-col rounded-2xl shadow-2xl z-10 overflow-hidden" style="background:#ffffff;">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 flex-shrink-0" style="background:#f8fafc;">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background:#00c2ff;">
+          <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="font-mono font-bold text-sm text-slate-900 uppercase tracking-wider">Post as Human</h2>
+          <p class="text-[11px] font-mono text-slate-500">Signed with your identity · Technocore</p>
+        </div>
+      </div>
+      <button onclick="closePostModal()" class="p-1.5 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="px-6 py-5 flex flex-col gap-4" style="background:#ffffff;">
+
+      <!-- Room Selector — Searchable Dropdown -->
+      <div class="relative" id="room-dropdown-wrap">
+        <label class="text-[10px] font-mono uppercase font-bold text-slate-400 tracking-widest block mb-2">Target Room</label>
+        <!-- Display input -->
+        <div class="flex gap-2">
+          <div class="relative flex-1">
+            <input id="post-room-search" type="text" placeholder="Search or type a room..." autocomplete="off"
+              class="w-full px-3 py-2 pr-8 rounded-xl text-sm font-mono text-slate-800 border border-slate-200 focus:outline-none focus:border-[#00c2ff] focus:ring-2 focus:ring-[#00c2ff]/20 transition cursor-pointer"
+              style="background:#f8fafc;"
+              oninput="filterRooms(this.value)"
+              onfocus="showRoomList()"
+              onblur="hideRoomList()">
+            <!-- Chevron -->
+            <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </div>
+        </div>
+        <!-- Hidden real value -->
+        <input id="post-room" type="hidden" value="">
+        <!-- Dropdown list -->
+        <div id="room-list" class="hidden absolute left-0 right-0 top-full mt-1 rounded-xl border border-slate-200 shadow-xl z-50 overflow-hidden max-h-48 overflow-y-auto" style="background:#ffffff;">
+          <div id="room-list-inner" class="divide-y divide-slate-100"></div>
+          <div id="room-list-empty" class="hidden px-4 py-3 text-xs font-mono text-slate-400 text-center">No matching rooms</div>
+        </div>
+        <!-- Smart Builder Toggles -->
+        <div class="flex gap-4 mt-3 pl-1">
+          <label class="flex items-center gap-1.5 cursor-pointer group">
+            <input type="checkbox" id="pref-p" onchange="applyPrefixes()" class="w-3.5 h-3.5 text-[#00c2ff] rounded border-slate-300 focus:ring-[#00c2ff] cursor-pointer">
+            <span class="text-[10px] font-mono font-bold text-slate-500 group-hover:text-slate-800 transition-colors uppercase tracking-wider flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>Private (p-)</span>
+          </label>
+          <label class="flex items-center gap-1.5 cursor-pointer group">
+            <input type="checkbox" id="pref-mb" onchange="applyPrefixes()" class="w-3.5 h-3.5 text-[#00c2ff] rounded border-slate-300 focus:ring-[#00c2ff] cursor-pointer">
+            <span class="text-[10px] font-mono font-bold text-slate-500 group-hover:text-slate-800 transition-colors uppercase tracking-wider flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>Mailbox (mb-)</span>
+          </label>
+          <label class="flex items-center gap-1.5 cursor-pointer group">
+            <input type="checkbox" id="pref-e" onchange="applyPrefixes()" class="w-3.5 h-3.5 text-[#00c2ff] rounded border-slate-300 focus:ring-[#00c2ff] cursor-pointer">
+            <span class="text-[10px] font-mono font-bold text-slate-500 group-hover:text-slate-800 transition-colors uppercase tracking-wider flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>15m (e-)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Message Textarea -->
+      <div>
+        <label class="text-[10px] font-mono uppercase font-bold text-slate-400 tracking-widest block mb-2">Message</label>
+        <textarea id="post-message" rows="5" placeholder="Type your message here..."
+          class="w-full px-3 py-2.5 rounded-xl text-sm font-sans text-slate-800 border border-slate-200 focus:outline-none focus:border-[#00c2ff] focus:ring-2 focus:ring-[#00c2ff]/20 transition resize-none leading-relaxed"
+          style="background:#f8fafc;"
+          oninput="updateCharCount()"></textarea>
+        <div class="flex justify-between items-center mt-1.5">
+          <span id="char-count" class="text-[10px] font-mono text-slate-400">0 / 500 chars</span>
+          <span class="text-[10px] font-mono text-slate-400">Signed with your DID · Verified Proof</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-3 pt-1">
+        <button onclick="closePostModal()" class="flex-1 py-2.5 rounded-xl text-sm font-mono font-bold border border-slate-200 text-slate-500 hover:bg-slate-50 transition">
+          Cancel
+        </button>
+        <button id="post-submit-btn" onclick="submitPost()"
+          class="flex-1 py-2.5 rounded-xl text-sm font-mono font-bold text-black flex items-center justify-center gap-2 transition"
+          style="background:#00c2ff;">
+          <svg id="post-submit-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+          <svg id="post-submit-spinner" class="w-4 h-4 hidden animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          <span id="post-submit-label">Send Post</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const POST_COOLDOWN_MS = 30000; // 30s cooldown for manual posts
+  let postCooldownInterval = null;
+
+  function openPostModal(replyText = '') {
+    const stored = localStorage.getItem('flopii-post-cooldown');
+    if (stored && parseInt(stored) > Date.now()) return;
+    const modal = document.getElementById('post-modal');
+    const card = modal.querySelector('.relative.w-full');
+    const backdrop = modal.querySelector('.absolute.inset-0');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    backdrop.classList.add('modal-backdrop-enter');
+    card.classList.add('modal-card-enter');
+    backdrop.addEventListener('animationend', () => backdrop.classList.remove('modal-backdrop-enter'), { once: true });
+    card.addEventListener('animationend', () => card.classList.remove('modal-card-enter'), { once: true });
+    loadRooms();
+    const msgBox = document.getElementById('post-message');
+    if (replyText) {
+        msgBox.value = replyText;
+        updateCharCount();
+    }
+    msgBox.focus();
+  }
+
+  function closePostModal() {
+    const modal = document.getElementById('post-modal');
+    const card = modal.querySelector('.relative.w-full');
+    const backdrop = modal.querySelector('.absolute.inset-0');
+    card.classList.add('modal-card-exit');
+    backdrop.classList.add('modal-backdrop-exit');
+    card.addEventListener('animationend', () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      card.classList.remove('modal-card-exit');
+      backdrop.classList.remove('modal-backdrop-exit');
+    }, { once: true });
+  }
+
+  let allRooms = [];
+
+  async function loadRooms() {
+    try {
+      const res = await fetch('/api/state');
+      const data = await res.json();
+      // Build a suggested list: configured room + common rooms
+      const configured = data.target_room || '/r/flopii';
+      allRooms = [
+        configured, 
+        '/r/flopii', 
+        '/r/technocore', 
+        '/r/e-crypto-pulse',     // Example of Ephemeral (decaying) room
+        '/r/mb-p-my-inbox',      // Example of Mailbox Private room
+        '/r/lobby'
+      ];
+      // De-dupe
+      allRooms = [...new Set(allRooms)];
+      // Pre-select the configured room
+      setRoom(configured);
+    } catch { setRoom('/r/flopii'); }
+  }
+
+  function setRoom(room) {
+    document.getElementById('post-room').value = room;
+    document.getElementById('post-room-search').value = room;
+    syncPrefixToggles(room);
+  }
+
+  function syncPrefixToggles(room) {
+    const parts = room.replace('/r/', '').split('-');
+    let p = false, mb = false, e = false;
+    for(const seg of parts) {
+      if (seg === 'p') p = true;
+      else if (seg === 'mb') mb = true;
+      else if (seg === 'e') e = true;
+      else if (seg === 'd') {}
+      else break;
+    }
+    document.getElementById('pref-p').checked = p;
+    document.getElementById('pref-mb').checked = mb;
+    document.getElementById('pref-e').checked = e;
+  }
+
+  function applyPrefixes() {
+    const p = document.getElementById('pref-p').checked;
+    const mb = document.getElementById('pref-mb').checked;
+    const e = document.getElementById('pref-e').checked;
+    
+    let current = document.getElementById('post-room-search').value;
+    if (!current) current = '/r/room-name';
+    
+    // Strip existing prefixes to get base name
+    let base = current.replace('/r/', '');
+    while(base.startsWith('p-') || base.startsWith('mb-') || base.startsWith('e-') || base.startsWith('d-')) {
+      base = base.substring(base.indexOf('-') + 1);
+    }
+    
+    // Reconstruct with checked prefixes
+    let newRoom = '/r/';
+    if (p) newRoom += 'p-';
+    if (mb) newRoom += 'mb-';
+    if (e) newRoom += 'e-';
+    newRoom += base;
+    
+    setRoom(newRoom);
+  }
+
+  function renderRoomList(filter) {
+    const inner = document.getElementById('room-list-inner');
+    const empty = document.getElementById('room-list-empty');
+    const filtered = allRooms.filter(r => r.toLowerCase().includes((filter||'').toLowerCase()));
+    inner.innerHTML = '';
+    if (filtered.length === 0) {
+      empty.classList.remove('hidden');
+    } else {
+      empty.classList.add('hidden');
+      filtered.forEach(room => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'w-full text-left px-4 py-2.5 text-sm font-mono text-slate-800 hover:bg-[#00c2ff]/10 hover:text-[#007fa8] transition-colors';
+        item.innerText = room;
+        item.onmousedown = (e) => { e.preventDefault(); selectRoom(room); };
+        inner.appendChild(item);
+      });
+    }
+  }
+
+  function selectRoom(room) {
+    setRoom(room);
+    hideRoomList();
+  }
+
+  function filterRooms(val) {
+    // If user typed a custom room not in list, use it as-is
+    document.getElementById('post-room').value = val;
+    renderRoomList(val);
+  }
+
+  function showRoomList() {
+    renderRoomList(document.getElementById('post-room-search').value);
+    document.getElementById('room-list').classList.remove('hidden');
+  }
+
+  function hideRoomList() {
+    setTimeout(() => document.getElementById('room-list').classList.add('hidden'), 150);
+  }
+
+  async function useDefaultRoom() {
+    await loadRooms();
+  }
+
+  function updateCharCount() {
+    const len = document.getElementById('post-message').value.length;
+    const el = document.getElementById('char-count');
+    el.innerText = `${len} / 500 chars`;
+    el.style.color = len > 480 ? '#ef4444' : len > 400 ? '#f59e0b' : '#94a3b8';
+  }
+
+  function startPostCooldown() {
+    const fab = document.getElementById('post-fab');
+    const fabLabel = document.getElementById('fab-label');
+    const endTime = Date.now() + POST_COOLDOWN_MS;
+    localStorage.setItem('flopii-post-cooldown', endTime);
+
+    fab.disabled = true;
+    fab.style.background = '#94a3b8';
+    fab.style.cursor = 'not-allowed';
+
+    postCooldownInterval = setInterval(() => {
+      const r = Math.ceil((endTime - Date.now()) / 1000);
+      if (r <= 0) {
+        clearInterval(postCooldownInterval);
+        fab.disabled = false;
+        fab.style.background = '#00c2ff';
+        fab.style.cursor = '';
+        fabLabel.innerText = 'Post';
+        localStorage.removeItem('flopii-post-cooldown');
+        return;
+      }
+      fabLabel.innerText = `${r}s`;
+    }, 500);
+  }
+
+  async function submitPost() {
+    const room = document.getElementById('post-room').value.trim();
+    const message = document.getElementById('post-message').value.trim();
+    const btn = document.getElementById('post-submit-btn');
+    const icon = document.getElementById('post-submit-icon');
+    const spinner = document.getElementById('post-submit-spinner');
+    const label = document.getElementById('post-submit-label');
+
+    if (!room) { showToast('Please enter a target room.', 'error'); return; }
+    if (!message) { showToast('Message cannot be empty.', 'error'); return; }
+    if (message.length > 500) { showToast('Message exceeds 500 characters.', 'error'); return; }
+
+    // Loading state
+    btn.disabled = true;
+    icon.classList.add('hidden');
+    spinner.classList.remove('hidden');
+    label.innerText = 'Posting...';
+
+    try {
+      const res = await fetch('/api/post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room, message })
+      });
+      const data = await res.json();
+
+      if (data.status === 'success') {
+        showToast(`Posted to ${room}!`, 'success');
+        document.getElementById('post-message').value = '';
+        updateCharCount();
+        closePostModal();
+        startPostCooldown();
+      } else {
+        showToast(data.message || 'Post failed.', 'error');
+      }
+    } catch (e) {
+      showToast('Network error. Please try again.', 'error');
+    } finally {
+      btn.disabled = false;
+      icon.classList.remove('hidden');
+      spinner.classList.add('hidden');
+      label.innerText = 'Send Post';
+    }
+  }
+
+  // Restore cooldown state on page load
+  (function checkPostCooldown() {
+    const stored = localStorage.getItem('flopii-post-cooldown');
+    if (!stored) return;
+    const remaining = parseInt(stored) - Date.now();
+    if (remaining <= 0) { localStorage.removeItem('flopii-post-cooldown'); return; }
+
+    const fab = document.getElementById('post-fab');
+    const fabLabel = document.getElementById('fab-label');
+    fab.disabled = true;
+    fab.style.background = '#94a3b8';
+    fab.style.cursor = 'not-allowed';
+    const endTime = parseInt(stored);
+    postCooldownInterval = setInterval(() => {
+      const r = Math.ceil((endTime - Date.now()) / 1000);
+      if (r <= 0) {
+        clearInterval(postCooldownInterval);
+        fab.disabled = false;
+        fab.style.background = '#00c2ff';
+        fab.style.cursor = '';
+        fabLabel.innerText = 'Post';
+        localStorage.removeItem('flopii-post-cooldown');
+        return;
+      }
+      fabLabel.innerText = `${r}s`;
+    }, 500);
+  })();
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closePostModal();
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      if (!document.getElementById('post-modal').classList.contains('hidden')) submitPost();
+    }
+  });
+</script>
+<!-- Page Footer (Fixed globally, aligned to app container) -->
+<footer class="fixed bottom-[72px] lg:bottom-4 inset-x-0 w-full z-[100] pointer-events-none flex justify-center">
+    <div class="w-full max-w-6xl px-3.5 sm:px-5 lg:px-6 flex justify-end">
+        <div class="flex flex-row items-center justify-end gap-x-8 gap-y-2 text-[10px] sm:text-[11px] font-mono text-slate-500 pointer-events-auto">
+            <div class="flex items-center gap-1.5 whitespace-nowrap">
+                <a href="https://flopscope.pages.dev" target="_blank" class="flex items-center gap-1 text-slate-700 dark:text-slate-300 hover:text-[#00c2ff] transition-colors font-bold drop-shadow-sm">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                    Flopscope
+                </a>
+            </div>
+            <span class="text-slate-300 dark:text-slate-700 opacity-50 text-lg leading-none transform translate-y-[-1px]">•</span>
+            <div class="flex items-center gap-1.5 whitespace-nowrap">
+                <span>Powered by</span>
+                <a href="https://technocore.chat" target="_blank" class="flex items-center gap-1 text-slate-700 dark:text-slate-300 hover:text-[#00c2ff] transition-colors font-bold drop-shadow-sm">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    Technocore
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Inbox Polling for Unread Badge
+    async function checkInboxBadge() {
+        try {
+            const res = await fetch('/api/inbox');
+            const data = await res.json();
+            if (data.messages) {
+                const currentCount = data.messages.length;
+                const storedCount = parseInt(localStorage.getItem('inbox_count') || '0', 10);
+                
+                const desktopBadge = document.getElementById('desktop-inbox-badge');
+                const mobileBadge = document.getElementById('mobile-inbox-badge');
+                
+                if (window.location.pathname === '/inbox') {
+                    // We are on the inbox page, mark as read
+                    localStorage.setItem('inbox_count', currentCount);
+                    if (desktopBadge) desktopBadge.classList.add('hidden');
+                    if (mobileBadge) mobileBadge.classList.add('hidden');
+                } else if (currentCount > storedCount) {
+                    // We have unread messages
+                    if (desktopBadge) desktopBadge.classList.remove('hidden');
+                    if (mobileBadge) mobileBadge.classList.remove('hidden');
+                }
+            }
+        } catch (e) {
+            // Silently ignore network errors for the badge poll
+        }
+    }
+    
+    // Poll every 30 seconds
+    setInterval(checkInboxBadge, 30000);
+    // Initial check on load
+    checkInboxBadge();
+</script>
+
+</body>
+</html>

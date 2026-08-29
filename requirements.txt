@@ -1,0 +1,9 @@
+streamlit
+pandas
+requests
+pytest
+cryptography
+base58
+feedparser
+openai
+schedule

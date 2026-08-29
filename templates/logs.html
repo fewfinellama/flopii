@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %} | Logs{% endblock %}
+
+{% block content %}
+<!-- Response Detail Modal -->
+<div id="response-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeModal()"></div>
+  <div class="relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl shadow-2xl z-10 overflow-hidden" style="background:#ffffff;">
+
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 flex-shrink-0" style="background:#f8fafc;">
+      <div class="flex items-center gap-3">
+        <div id="modal-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0"></div>
+        <div>
+          <h2 class="font-mono font-bold text-sm text-slate-900 uppercase tracking-wider">Technocore Response</h2>
+          <p id="modal-meta" class="text-[11px] font-mono text-slate-500 mt-0.5"></p>
+        </div>
+      </div>
+      <button onclick="closeModal()" class="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="flex flex-col gap-0 overflow-y-auto flex-1" style="background:#ffffff;">
+
+      <!-- Payload Sent -->
+      <div class="px-6 pt-5 pb-4 border-b border-slate-100">
+        <label class="text-[10px] font-mono uppercase font-bold text-slate-400 tracking-widest block mb-3">Payload Sent</label>
+        <pre id="modal-payload" class="text-xs font-mono text-slate-800 whitespace-pre-wrap break-words leading-relaxed" style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:12px; padding:16px; overflow-x:auto;"></pre>
+      </div>
+
+      <!-- Network Response -->
+      <div class="px-6 pt-5 pb-6">
+        <label class="text-[10px] font-mono uppercase font-bold text-slate-400 tracking-widest block mb-3">Network Response from Technocore</label>
+        <pre id="modal-response" class="text-xs font-mono text-slate-800 whitespace-pre-wrap break-words leading-relaxed" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:16px; overflow-x:auto;"></pre>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="flex items-center justify-between mb-5">
+  <h1 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight font-mono uppercase">Audit Logs</h1>
+  <select id="log-filter" onchange="currentPage=1;renderLogs()" class="bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-mono text-slate-700 dark:text-slate-300 focus:outline-none focus:border-[#00c2ff]">
+    <option value="all">All Events</option>
+    <option value="Success">Success Only</option>
+    <option value="Error">Errors Only</option>
+  </select>
+</div>
+
+<div class="glass-panel rounded-2xl shadow-sm flex flex-col">
+  <div id="logs-container" class="divide-y divide-slate-200 dark:divide-slate-800/80"></div>
+
+  <!-- Pagination -->
+  <div class="px-4 py-3 flex justify-between items-center text-xs font-mono text-slate-500 border-t border-slate-200 dark:border-slate-800">
+    <span id="page-info">Page 1</span>
+    <div class="flex gap-2">
+      <button onclick="changePage(-1)" class="px-3 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition">← Prev</button>
+      <button onclick="changePage(1)" class="px-3 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition">Next →</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let allLogs = [];
+    let currentPage = 1;
+    const itemsPerPage = 8;
+
+    async function fetchState() {
+        const res = await fetch('/api/state');
+        const data = await res.json();
+        allLogs = data.logs || [];
+        renderLogs();
+    }
+
+    function changePage(delta) {
+        const filtered = getFiltered();
+        const maxPage = Math.ceil(filtered.length / itemsPerPage) || 1;
+        currentPage = Math.min(Math.max(1, currentPage + delta), maxPage);
+        renderLogs();
+    }
+
+    function getFiltered() {
+        const f = document.getElementById('log-filter').value;
+        return allLogs.filter(l => f === 'all' || (f === 'Success' ? l.status === 'Success' : l.status !== 'Success'));
+    }
+
+    function openModal(idx) {
+        const log = getFiltered()[idx + (currentPage - 1) * itemsPerPage];
+        const isSuccess = log.status === 'Success';
+
+        document.getElementById('modal-meta').innerText = `${log.timestamp} · ${log.target_room}`;
+        document.getElementById('modal-status-dot').className = `w-2.5 h-2.5 rounded-full flex-shrink-0 ${isSuccess ? 'bg-emerald-500' : 'bg-rose-500'}`;
+        document.getElementById('modal-payload').innerText = log.payload || '—';
+
+        let resp = log.response || '—';
+        try { resp = JSON.stringify(JSON.parse(resp), null, 2); } catch(e) {}
+        document.getElementById('modal-response').innerText = resp;
+
+        const respPre = document.getElementById('modal-response');
+        if (isSuccess) {
+            respPre.style.background = '#f0fdf4'; respPre.style.borderColor = '#bbf7d0'; respPre.style.color = '#166534';
+        } else {
+            respPre.style.background = '#fff1f2'; respPre.style.borderColor = '#fecdd3'; respPre.style.color = '#9f1239';
+        }
+
+        const modal = document.getElementById('response-modal');
+        const card = modal.querySelector('.relative.w-full');
+        const backdrop = modal.querySelector('.absolute.inset-0');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        backdrop.classList.add('modal-backdrop-enter');
+        card.classList.add('modal-card-enter');
+        backdrop.addEventListener('animationend', () => backdrop.classList.remove('modal-backdrop-enter'), { once: true });
+        card.addEventListener('animationend', () => card.classList.remove('modal-card-enter'), { once: true });
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('response-modal');
+        const card = modal.querySelector('.relative.w-full');
+        const backdrop = modal.querySelector('.absolute.inset-0');
+        card.classList.add('modal-card-exit');
+        backdrop.classList.add('modal-backdrop-exit');
+        card.addEventListener('animationend', () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            card.classList.remove('modal-card-exit');
+            backdrop.classList.remove('modal-backdrop-exit');
+        }, { once: true });
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    function renderLogs() {
+        const container = document.getElementById('logs-container');
+        const filtered = getFiltered();
+        const maxPage = Math.ceil(filtered.length / itemsPerPage) || 1;
+        currentPage = Math.min(currentPage, maxPage);
+
+        document.getElementById('page-info').innerText = `Page ${currentPage} of ${maxPage} · ${filtered.length} entries`;
+
+        const pageLogs = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+        container.innerHTML = '';
+
+        if (pageLogs.length === 0) {
+            container.innerHTML = '<p class="p-5 text-sm font-mono text-slate-400">No logs found.</p>';
+            return;
+        }
+
+        pageLogs.forEach((log, idx) => {
+            const isSuccess = log.status === 'Success';
+            const preview = log.payload ? log.payload.split('\n').slice(0, 1)[0].substring(0, 100) : '—';
+
+            const row = document.createElement('div');
+            row.className = 'flex items-center justify-between gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition';
+            row.innerHTML = `
+              <div class="flex items-center gap-3 min-w-0 flex-1">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border flex-shrink-0 ${isSuccess ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700' : 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400 border-rose-300 dark:border-rose-700'}">${isSuccess ? '✓' : '✗'}</span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-xs font-mono text-slate-700 dark:text-slate-300 truncate">${preview}</p>
+                  <div class="flex items-center">
+                    <p class="text-[10px] font-mono text-slate-400 mt-0.5">${log.timestamp} · ${log.target_room}</p>
+                    ${getRoomBadges(log.target_room)}
+                  </div>
+                </div>
+              </div>
+              <button onclick="openModal(${idx})" class="flex-shrink-0 text-[11px] font-mono font-semibold text-[#00c2ff] hover:underline px-2 py-1 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-950/40 transition">
+                View Response
+              </button>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    fetchState();
+</script>
+{% endblock %}

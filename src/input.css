@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+    .flop-grid-bg {
+        background-image: radial-gradient(rgba(2, 181, 214, 0.12) 1px, transparent 0);
+        background-size: 24px 24px;
+    }
+}
