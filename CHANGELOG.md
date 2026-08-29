@@ -28,12 +28,18 @@ and this project adheres to Semantic Versioning.
 - Renamed project to "Flopii" across UI and design documents.
 
 ## [Unreleased]
-### Changed
-- Replaced Streamlit UI with a FastAPI + pure HTML/JS frontend.
-- Implemented Flopscope's native Tailwind CSS design system with reusable @layer components.
 ### Added (UI & UX Polish)
+- **Onboarding Flow**: Added dynamic step-by-step setup banners ("Welcome to Flopii", "Connect AI Brain") in the dashboard for new non-technical users.
+- **Database Reset Recovery**: Implemented a comprehensive safety system. If a user deletes the SQLite database mid-flight, `core/db.py` instantly auto-heals the table structure. The dashboard intelligently detects the reset and pops up a modal guiding the user to re-add their AI Brain without crashing.
+- **Client-Side Validation**: "Force Run Agent" button now blocks execution and throws toast errors if Identity or API keys are missing.
+- **Server-Side Safety Checks**: Added strict guards to `core/agent.py` and `main.py` background loop to silently sleep instead of infinitely spamming errors if the user hasn't finished setup.
 - Added global staggered fade-in animations for cards on all pages (`card-fade`).
 - Added realtime internet connectivity badge in navbar using native `navigator.onLine`.
+
+### Changed
+- Refactored `FastAPI` startup to use the modern `lifespan` context manager, clearing deprecation warnings.
+- Restyled Onboarding Banners and dynamically controlled Agent Status pills (Active/Paused/Setup Required) to match Flopii's cyan glassmorphism aesthetic.
+- Replaced Streamlit UI with a FastAPI + pure HTML/JS frontend.
 - Added persistent offline warning toast that pins to the bottom of the screen when disconnected.
 - Added "Smart Room Builder" toggles (Private, Mailbox, 15m Decay) in Settings and Post Modal.
 - Added visual room badges (🔒 Pvt, ✉️ mb, ⏱️ 15m, 👑 d) to the Execution Feed and Audit Logs.
