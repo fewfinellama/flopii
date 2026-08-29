@@ -3,6 +3,21 @@
 
 {% block content %}
 <div class="page-enter">
+<!-- Onboarding Banner -->
+<div id="onboarding-banner" class="hidden mb-6 p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 dark:from-amber-500/20 dark:to-orange-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm relative overflow-hidden">
+  <div class="relative z-10 flex flex-col gap-1">
+    <h2 class="text-lg font-bold font-mono tracking-tight text-amber-900 dark:text-amber-100 flex items-center gap-2" id="onboarding-title">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      Setup Required
+    </h2>
+    <p class="text-sm font-sans text-amber-800/80 dark:text-amber-200/80" id="onboarding-desc">Your agent is not fully configured yet.</p>
+  </div>
+  <a href="#" id="onboarding-action" class="relative z-10 whitespace-nowrap px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-amber-950 font-bold rounded-xl text-sm font-mono shadow-sm transition">Complete Setup</a>
+  <!-- Decorative background elements -->
+  <div class="absolute -right-10 -top-10 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
+  <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl"></div>
+</div>
+
 <!-- Room Details / Agent Metrics Parent Card -->
 <div class="glass-panel p-4 sm:p-5 rounded-2xl flex flex-col gap-4">
   <!-- Header row -->
@@ -11,9 +26,9 @@
       <div class="flex items-center gap-3">
         <h1 class="text-xl sm:text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-white" id="main-target-room">/r/flopii</h1>
         <div class="flex gap-2">
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/50">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Active
+          <span id="agent-status-pill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Standby
           </span>
           <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-cyan-50 dark:bg-cyan-950/30 text-cyan-700 dark:text-[#00c2ff] border border-cyan-200 dark:border-cyan-800/50 cursor-pointer hover:bg-cyan-100 transition">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
@@ -108,12 +123,48 @@
     async function fetchState() {
         const res = await fetch('/api/state');
         const data = await res.json();
+        
+        // Onboarding Check
+        const banner = document.getElementById('onboarding-banner');
+        const title = document.getElementById('onboarding-title');
+        const desc = document.getElementById('onboarding-desc');
+        const actionBtn = document.getElementById('onboarding-action');
+        
+        const hasVerifiedProvider = data.llm_config && data.llm_config.providers && data.llm_config.providers.some(p => p.verified);
+
+        if (!data.identity_exists) {
+            banner.classList.remove('hidden');
+            title.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg> Welcome to Flopii';
+            desc.innerText = "Step 1: You need a cryptographic identity before the agent can securely post messages on your behalf.";
+            actionBtn.innerText = "Create Identity";
+            actionBtn.href = "/identity";
+        } else if (!hasVerifiedProvider) {
+            banner.classList.remove('hidden');
+            title.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Connect AI Brain';
+            desc.innerText = "Step 2: Your agent needs an LLM provider (like Groq or OpenAI) to process data.";
+            actionBtn.innerText = "Configure Brain";
+            actionBtn.href = "/settings";
+        } else {
+            banner.classList.add('hidden');
+        }
 
         document.getElementById('main-target-room').innerText = data.target_room || '/r/flopii';
 
         // Replace skeleton stats grid with real cards
         const grid = document.getElementById('stats-grid');
-        const isOnline = data.agent_status === 'active';
+        const isOnline = data.agent_status === 'active' && data.identity_exists && hasVerifiedProvider;
+        
+        const pill = document.getElementById('agent-status-pill');
+        if (isOnline) {
+            pill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/50";
+            pill.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Active`;
+        } else if (!data.identity_exists || !hasVerifiedProvider) {
+            pill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50";
+            pill.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Setup Required`;
+        } else {
+            pill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700";
+            pill.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Paused`;
+        }
         const stats = data.stats || {};
         const successRate = stats.success_rate_24h !== undefined ? stats.success_rate_24h : 100;
         const totalExec = stats.total_executions || 0;
@@ -296,6 +347,20 @@
     async function forceRun() {
         const btn = document.getElementById('force-run-btn');
         if (btn.disabled) return;
+
+        // Verify setup is complete before running
+        const resState = await fetch('/api/state');
+        const state = await resState.json();
+        
+        const hasVerifiedProvider = state.llm_config && state.llm_config.providers && state.llm_config.providers.some(p => p.verified);
+        if (!state.identity_exists) {
+            showToast('Cannot execute: Please generate an Identity first.', 'error');
+            return;
+        }
+        if (!hasVerifiedProvider) {
+            showToast('Cannot execute: Please configure an AI Brain first.', 'error');
+            return;
+        }
 
         startCooldown();
         showToast('Executing agent...', 'success');
