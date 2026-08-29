@@ -44,10 +44,22 @@ async def autonomous_agent_loop():
             status = get_setting("agent_status") or "active"
             interval_str = get_setting("execution_interval")
             interval_min = int(interval_str) if interval_str else 1
+            
+            # Check if setup is complete
+            did = get_setting("agent_did")
+            llm_config_str = get_setting("llm_config")
+            has_verified_provider = False
+            if llm_config_str:
+                llm_config = json.loads(llm_config_str)
+                if llm_config.get("providers"):
+                    has_verified_provider = any(p.get("verified", False) for p in llm_config["providers"])
 
-            if status == "active":
+            if not did or not has_verified_provider:
+                # Silently wait until user finishes setup
+                pass
+            elif status == "active":
                 print(
-                    f"\n[AUTONOMOUS LOOP] Agent ACTIVE. Executing workflow cycle at target room..."
+                    f"\n[AUTONOMOUS LOOP] Agent ACTIVE. Executing workflow cycle..."
                 )
                 result = await asyncio.to_thread(run_agent_cycle)
                 print(
@@ -131,16 +143,9 @@ def get_state():
         "did": did,
         "agent_mailbox": agent_mailbox,
         "llm_config": json.loads(get_setting("llm_config")) if get_setting("llm_config") else {
-            "primary": "legacy",
-            "auto_failover": False,
-            "providers": [{
-                "id": "legacy",
-                "name": get_setting("llm_provider") or "OpenAI",
-                "model": get_setting("llm_model") or "",
-                "api_key": get_setting("api_key") or "",
-                "verified": True,
-                "failures": 0
-            }]
+            "primary": "",
+            "auto_failover": True,
+            "providers": []
         },
         "target_room": get_setting("target_room") or "/r/flopii",
         "data_endpoints": get_setting("data_endpoints") or "",
