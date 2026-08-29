@@ -94,7 +94,10 @@ def run_agent_cycle() -> dict:
 
         mailbox_context = ""
         if inbox_messages:
-            current_count = int(get_setting("mailbox_commands") or 0)
+            try:
+                current_count = int(get_setting("mailbox_commands") or 0)
+            except ValueError:
+                current_count = 0
             set_setting("mailbox_commands", str(current_count + len(inbox_messages)))
             logging.info(f"Mailbox contains {len(inbox_messages)} messages.")
 
@@ -120,7 +123,7 @@ def run_agent_cycle() -> dict:
         payload, usage_stats = generate_with_failover(llm_config, context_data, system_prompt, db_update_callback=update_llm_config_cb)
 
         # Fallback if LLM fails
-        if not payload or payload.startswith("Error"):
+        if not payload or not payload.strip() or payload.startswith("Error"):
             err = payload if payload else "LLM returned empty payload."
             log_post(
                 target_room, "Execution aborted.", "Failed", f'{{"error": "{err}"}}'

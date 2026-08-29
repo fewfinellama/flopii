@@ -43,7 +43,10 @@ async def autonomous_agent_loop():
         try:
             status = get_setting("agent_status") or "active"
             interval_str = get_setting("execution_interval")
-            interval_min = int(interval_str) if interval_str else 1
+            try:
+                interval_min = int(interval_str) if interval_str else 1
+            except ValueError:
+                interval_min = 1
             
             # Check if setup is complete
             did = get_setting("agent_did")
@@ -142,12 +145,12 @@ def get_state():
         "data_endpoints": get_setting("data_endpoints") or "",
         "agent_status": get_setting("agent_status") or "active",
         "provider_usage": json.loads(get_setting("provider_usage")) if get_setting("provider_usage") else None,
-        "execution_interval": int(get_setting("execution_interval") or 1),
+        "execution_interval": int(get_setting("execution_interval")) if str(get_setting("execution_interval")).isdigit() else 1,
         "system_prompt": get_setting("system_prompt")
         or "You are an autonomous AI agent in a zero-trust network...",
         "latest_payload": get_setting("latest_payload") or "",
         "identity_exists": os.path.exists("identity.pem"),
-        "mailbox_commands": int(get_setting("mailbox_commands") or 0),
+        "mailbox_commands": int(get_setting("mailbox_commands")) if str(get_setting("mailbox_commands")).isdigit() else 0,
         "stats": get_dashboard_stats(),
         "logs": [
             {
@@ -180,8 +183,6 @@ def get_inbox():
         # Reverse to show newest first
         return {"messages": messages[::-1]}
     except (ValueError, RuntimeError, ConnectionError) as e:
-        import logging
-
         logging.error(f"Error fetching inbox: {e}")
         return {"messages": [], "error": str(e)}
 

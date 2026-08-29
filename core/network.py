@@ -74,7 +74,7 @@ def post_to_technocore(
         # 422 means duplicate filter, 429 means rate limit, etc.
         try:
             resp_json = response.json()
-        except:
+        except ValueError:
             resp_json = {"text": response.text}
 
         response.raise_for_status()
@@ -83,7 +83,7 @@ def post_to_technocore(
         logging.error(f"Failed to post to Technocore: {e}")
         try:
             error_data = e.response.json()
-        except:
+        except (ValueError, AttributeError):
             error_data = {
                 "error": str(e),
                 "status_code": getattr(e.response, "status_code", None),
