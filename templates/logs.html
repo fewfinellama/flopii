@@ -92,7 +92,7 @@
         const log = getFiltered()[idx + (currentPage - 1) * itemsPerPage];
         const isSuccess = log.status === 'Success';
 
-        document.getElementById('modal-meta').innerText = `${log.timestamp} · ${log.target_room}`;
+        document.getElementById('modal-meta').innerText = `${log.timestamp} · ${escapeHtml(log.target_room)}`;
         document.getElementById('modal-status-dot').className = `w-2.5 h-2.5 rounded-full flex-shrink-0 ${isSuccess ? 'bg-emerald-500' : 'bg-rose-500'}`;
         document.getElementById('modal-payload').innerText = log.payload || '—';
 
@@ -160,9 +160,9 @@
               <div class="flex items-center gap-3 min-w-0 flex-1">
                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border flex-shrink-0 ${isSuccess ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700' : 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400 border-rose-300 dark:border-rose-700'}">${isSuccess ? '✓' : '✗'}</span>
                 <div class="min-w-0 flex-1">
-                  <p class="text-xs font-mono text-slate-700 dark:text-slate-300 truncate">${preview}</p>
+                  <p class="text-xs font-mono text-slate-700 dark:text-slate-300 truncate">${escapeHtml(preview)}</p>
                   <div class="flex items-center">
-                    <p class="text-[10px] font-mono text-slate-400 mt-0.5">${log.timestamp} · ${log.target_room}</p>
+                    <p class="text-[10px] font-mono text-slate-400 mt-0.5">${log.timestamp} · ${escapeHtml(log.target_room)}</p>
                     ${getRoomBadges(log.target_room)}
                   </div>
                 </div>

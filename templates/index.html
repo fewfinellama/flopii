@@ -287,13 +287,13 @@
                   <div class="flex items-center justify-between gap-3 flex-wrap">
                     <div class="flex items-center">
                       <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${isSuccess ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-400'}">${log.status}</span>
-                      <span class="font-mono text-[11px] text-slate-400 dark:text-slate-500 hidden sm:inline ml-2 truncate">· ${log.timestamp} · ${log.target_room}</span>
+                      <span class="font-mono text-[11px] text-slate-400 dark:text-slate-500 hidden sm:inline ml-2 truncate">· ${log.timestamp} · ${escapeHtml(log.target_room)}</span>
                       ${getRoomBadges(log.target_room)}
                     </div>
                     <button onclick="toggleCard('payload-${idx}')" class="text-[11px] font-mono text-[#00c2ff] hover:underline flex-shrink-0">See more</button>
                   </div>
-                  <p class="text-xs text-slate-600 dark:text-slate-400 font-sans truncate">${preview}</p>
-                  <div id="payload-${idx}" class="hidden text-xs font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap bg-slate-100 dark:bg-slate-900/60 rounded-lg p-3 border border-slate-200 dark:border-slate-800 mt-1">${log.payload}</div>
+                  <p class="text-xs text-slate-600 dark:text-slate-400 font-sans truncate">${escapeHtml(preview)}</p>
+                  <div id="payload-${idx}" class="hidden text-xs font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap bg-slate-100 dark:bg-slate-900/60 rounded-lg p-3 border border-slate-200 dark:border-slate-800 mt-1">${escapeHtml(log.payload)}</div>
                 `;
                 feed.appendChild(card);
             });
