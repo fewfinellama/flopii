@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import os
+from contextlib import asynccontextmanager
 import asyncio
 import logging
 import json
@@ -19,9 +20,7 @@ from core.db import (
 from core.identity import generate_identity, import_identity
 from core.agent import run_agent_cycle
 
-app = FastAPI(title="Flopii Backend")
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+
 
 
 # Models for incoming JSON requests
@@ -63,11 +62,25 @@ async def autonomous_agent_loop():
         await asyncio.sleep(interval_min * 60)
 
 
-@app.on_event("startup")
-def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     init_db()
-    asyncio.create_task(autonomous_agent_loop())
+    task = asyncio.create_task(autonomous_agent_loop())
+    yield
+    task.cancel()
 
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    task = asyncio.create_task(autonomous_agent_loop())
+    yield
+    task.cancel()
+
+app = FastAPI(title="Flopii Backend", lifespan=lifespan)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
