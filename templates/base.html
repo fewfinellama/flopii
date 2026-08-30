@@ -768,7 +768,6 @@
 
 <script>
     // Inbox Polling for Unread Badge
-    async 
     function escapeHtml(unsafe) {
         return (unsafe || "").toString()
              .replace(/&/g, "&amp;")
@@ -778,7 +777,7 @@
              .replace(/'/g, "&#039;");
     }
 
-    function checkInboxBadge() {
+    async function checkInboxBadge() {
         try {
             const res = await fetch('/api/inbox');
             const data = await res.json();
