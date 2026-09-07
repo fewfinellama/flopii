@@ -57,7 +57,9 @@ def post_to_technocore(
     # The room name used in the signature is just 'flopii' or 'lobby', not the full '/r/...'
     # Wait, the spec says `GET /r/<room>` and signature covers `<room>|<nonce>|<text>`.
     # Let's strip the '/r/' for the signature.
-    room_name = room_path.replace("/r/", "")
+    room_name = room_path
+    if room_name.startswith("/r/"): room_name = room_name[3:]
+    elif room_name.startswith("r/"): room_name = room_name[2:]
 
     nonce, text, sig = sign_message(
         private_key_pem, passphrase, room_name, original_text
@@ -96,7 +98,9 @@ def fetch_room(room_path: str) -> list:
     Fetches messages from a Technocore room via GET.
     Returns a list of message strings/objects.
     """
-    room_name = room_path.replace("/r/", "")
+    room_name = room_path
+    if room_name.startswith("/r/"): room_name = room_name[3:]
+    elif room_name.startswith("r/"): room_name = room_name[2:]
     api_url = f"https://technocore.chat/r/{room_name}"
     try:
         response = requests.get(api_url, timeout=10)
@@ -104,18 +108,28 @@ def fetch_room(room_path: str) -> list:
         # Technocore returns plain text lines. Each line is a JSON object.
         lines = response.text.strip().split("\n")
         messages = []
+        import re
         for line in lines:
             line = line.strip()
             if not line:
                 continue
-            try:
-                # Valid room messages are always JSON objects
-                msg_obj = json.loads(line)
-                if isinstance(msg_obj, dict):
-                    messages.append(msg_obj)
-            except json.JSONDecodeError:
-                # Ignore protocol headers like "say:", "next:", "(no new messages)", etc.
-                continue
+            # Parse Technocore plaintext format: [ID] TIMESTAMP <AUTHOR> MESSAGE
+            match = re.match(r"^\[(\d+)\] ([\d\-T:\.Z]+) <([^>]+)> (.*)$", line)
+            if match:
+                msg_id, timestamp, author, text = match.groups()
+                # Check if the text itself is JSON (we often post JSON payloads)
+                try:
+                    payload = json.loads(text)
+                except json.JSONDecodeError:
+                    payload = {"text": text}
+                
+                messages.append({
+                    "id": msg_id,
+                    "timestamp": timestamp,
+                    "author": author,
+                    "text": payload.get("text", text) if isinstance(payload, dict) else text,
+                    "raw_payload": text
+                })
         return messages
     except requests.exceptions.RequestException as e:
         logging.error(f"Failed to fetch room {room_path}: {e}")
