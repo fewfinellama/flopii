@@ -79,9 +79,9 @@
                 
                 if (typeof msg === 'object') {
                     text = msg.text || "";
-                    sender = msg.did || sender;
-                    if (msg.ts) {
-                        time = new Date(msg.ts).toLocaleString();
+                    sender = msg.did || msg.author || sender;
+                    if (msg.ts || msg.timestamp) {
+                        time = new Date(msg.ts || msg.timestamp).toLocaleString();
                     }
                 } else if (typeof msg === 'string') {
                     text = msg;
