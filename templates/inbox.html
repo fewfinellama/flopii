@@ -70,6 +70,7 @@
                 return;
             }
 
+            window.currentMailboxRoom = data.room || '';
             let html = '';
             data.messages.forEach((msg, idx) => {
                 let text = "Unknown format";
@@ -124,7 +125,7 @@
         const truncated = rawText.length > 50 ? rawText.substring(0, 50) + '...' : rawText;
         const replyString = `Replying to: "${truncated}"\n\n-> `;
         if (typeof openPostModal === 'function') {
-            openPostModal(replyString);
+            openPostModal(replyString, window.currentMailboxRoom);
         }
     }
 

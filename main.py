@@ -181,7 +181,7 @@ def get_inbox():
     try:
         messages = fetch_room(mailbox_room)
         # Reverse to show newest first
-        return {"messages": messages[::-1]}
+        return {"messages": messages[::-1], "room": mailbox_room}
     except (ValueError, RuntimeError, ConnectionError) as e:
         logging.error(f"Error fetching inbox: {e}")
         return {"messages": [], "error": str(e)}

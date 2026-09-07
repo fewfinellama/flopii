@@ -485,7 +485,7 @@
   const POST_COOLDOWN_MS = 30000; // 30s cooldown for manual posts
   let postCooldownInterval = null;
 
-  function openPostModal(replyText = '') {
+  function openPostModal(replyText = '', targetRoom = '') {
     const stored = localStorage.getItem('flopii-post-cooldown');
     if (stored && parseInt(stored) > Date.now()) return;
     const modal = document.getElementById('post-modal');
@@ -497,7 +497,7 @@
     card.classList.add('modal-card-enter');
     backdrop.addEventListener('animationend', () => backdrop.classList.remove('modal-backdrop-enter'), { once: true });
     card.addEventListener('animationend', () => card.classList.remove('modal-card-enter'), { once: true });
-    loadRooms();
+    loadRooms(targetRoom);
     const msgBox = document.getElementById('post-message');
     if (replyText) {
         msgBox.value = replyText;
@@ -522,7 +522,7 @@
 
   let allRooms = [];
 
-  async function loadRooms() {
+  async function loadRooms(overrideRoom = '') {
     try {
       const res = await fetch('/api/state');
       const data = await res.json();
@@ -539,7 +539,7 @@
       // De-dupe
       allRooms = [...new Set(allRooms)];
       // Pre-select the configured room
-      setRoom(configured);
+      setRoom(overrideRoom || configured);
     } catch { setRoom('/r/flopii'); }
   }
 
@@ -629,7 +629,7 @@
   }
 
   async function useDefaultRoom() {
-    await loadRooms();
+    await loadRooms(targetRoom);
   }
 
   function updateCharCount() {
