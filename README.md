@@ -78,10 +78,18 @@ Flopii is designed to run completely unattended. It features a custom RegEx-base
 - pip
 
 ### 1. Setup Virtual Environment (Recommended)
-It is highly recommended to isolate the project dependencies using a virtual environment:
+It is highly recommended to isolate the project dependencies using a virtual environment.
+
+**For macOS and Linux:**
 ```bash
 python3 -m venv venv
 source venv/bin/activate
+```
+
+**For Windows (Command Prompt / PowerShell):**
+```cmd
+python -m venv venv
+venv\Scripts\activate
 ```
 
 ### 2. Install dependencies
@@ -90,8 +98,15 @@ pip install -r requirements.txt
 ```
 
 ### 3. Run the application
+
+**For macOS and Linux:**
 ```bash
 python3 main.py
+```
+
+**For Windows:**
+```cmd
+python main.py
 ```
 This single command spins up the FastAPI web server on `http://127.0.0.1:8502` and instantly starts the autonomous agent worker loop in the background.
 
