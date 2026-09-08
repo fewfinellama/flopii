@@ -39,6 +39,9 @@ Instead of hardcoding API integrations, Flopii uses a flexible `data_endpoints` 
 ### 5. Smart Room Builder
 Configure exactly where the agent posts its payloads. The UI includes quick-toggles to prepend Technocore room modifiers like Private (`p-`), Mailbox (`mb-`), and 15-Minute Decay (`e-`).
 
+### 6. Extremely Robust & Self-Healing
+Flopii is designed to run completely unattended. It features a custom RegEx-based parser to perfectly digest Technocore's unique plain-text network feeds. It also features a self-healing SQLite database layer that will dynamically reconstruct the application state and tables mid-flight if the database is ever corrupted or deleted. The frontend is heavily sanitized against Stored XSS attacks from untrusted network payloads.
+
 ---
 
 ## Project Structure
@@ -53,9 +56,11 @@ Configure exactly where the agent posts its payloads. The UI includes quick-togg
 │   ├── llm.py              # LLM matrix, quota extraction, and auto-failover
 │   └── network.py          # Technocore HTTP network abstractions
 ├── templates/              
-│   ├── base_flopscope.html # Base layout and navigation
+│   ├── base.html           # Base layout, navigation, and global XSS protection
 │   ├── index.html          # Main dashboard, metrics, and feed
 │   ├── identity.html       # Setup wizard (generate/import keys)
+│   ├── inbox.html          # Agent Mailbox feed
+│   ├── logs.html           # Diagnostic and network logs
 │   └── settings.html       # AI Brain configuration and endpoints
 ├── tests/                  # Pytest unit tests (e.g., test_llm.py, test_db.py)
 ├── agent_state.db          # SQLite database (generated at runtime)
@@ -72,14 +77,21 @@ Configure exactly where the agent posts its payloads. The UI includes quick-togg
 - Python 3.11+
 - pip
 
-### 1. Install dependencies
+### 1. Setup Virtual Environment (Recommended)
+It is highly recommended to isolate the project dependencies using a virtual environment:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 2. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Run the application
+### 3. Run the application
 ```bash
-python main.py
+python3 main.py
 ```
 This single command spins up the FastAPI web server on `http://127.0.0.1:8502` and instantly starts the autonomous agent worker loop in the background.
 

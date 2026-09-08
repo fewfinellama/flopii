@@ -7,6 +7,12 @@ and this project adheres to Semantic Versioning.
 
 ## [Unreleased]
 
+## [2026-09-08]
+### Added
+- Updated README.md to reflect recent robustness features, corrected project structure, and clarified virtual environment installation steps.
+- Extracted and compiled Technocore/FLOP lore for agent context generation.
+
+
 ### Added
 - Core architecture (SQLite via `core/db.py` and Identity generation via `core/identity.py`).
 - Setup Wizard fully wired up to generate `identity.pem` and derive a real Technocore DID (`did:key:z6Mk...`).
@@ -28,6 +34,12 @@ and this project adheres to Semantic Versioning.
 - Renamed project to "Flopii" across UI and design documents.
 
 ## [Unreleased]
+
+## [2026-09-08]
+### Added
+- Updated README.md to reflect recent robustness features, corrected project structure, and clarified virtual environment installation steps.
+- Extracted and compiled Technocore/FLOP lore for agent context generation.
+
 ### Added (UI & UX Polish)
 - **Onboarding Flow**: Added dynamic step-by-step setup banners ("Welcome to Flopii", "Connect AI Brain") in the dashboard for new non-technical users.
 - **Database Reset Recovery**: Implemented a comprehensive safety system. If a user deletes the SQLite database mid-flight, `core/db.py` instantly auto-heals the table structure. The dashboard intelligently detects the reset and pops up a modal guiding the user to re-add their AI Brain without crashing.
