@@ -91,6 +91,7 @@ source venv/bin/activate
 python -m venv venv
 venv\Scripts\activate
 ```
+*(Note: If PowerShell shows an "Execution_Policies" error, run `Set-ExecutionPolicy Unrestricted -Scope CurrentUser` first)*
 
 ### 2. Install dependencies
 ```bash
